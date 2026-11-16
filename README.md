@@ -31,7 +31,7 @@ A full-stack web application that connects students who have lost their belongin
 |---|---|---|
 | Backend Developer | Michael | Backend development, API, and database
 | Frontend Developer 1 | Lindsay | Frontend development (Homepage, Report Submission, Contact Privacy)
-| Frontend Developer 2 | Danish | Frontend development (Public Report Listing & Details, Filtering Category)
+| Frontend Developer 2 | Danish | Frontend development (Public Report Listing & Details, Category Filtering)
 
 ## 6. Setup Instructions
 ### Prerequisites

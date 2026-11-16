@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "name": "Gedung Fasilkom"
+  },
+  {
+    "id": 2,
+    "name": "Classroom"
+  },
+  {
+    "id": 3,
+    "name": "Canteen"
+  },
+  {
+    "id": 4,
+    "name": "Student Lounge"
+  },
+  {
+    "id": 5,
+    "name": "Auditorium"
+  },
+  {
+    "id": 6,
+    "name": "Parking Lot"
+  },
+  {
+    "id": 7,
+    "name": "Mosque"
+  },
+  {
+    "id": 8,
+    "name": "Others"
+  }
+]

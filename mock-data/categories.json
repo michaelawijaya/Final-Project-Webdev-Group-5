@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "name": "Electronics"
+  },
+  {
+    "id": 2,
+    "name": "Bags & Wallets"
+  },
+  {
+    "id": 3,
+    "name": "Keys & Cards"
+  },
+  {
+    "id": 4,
+    "name": "Clothing & Accessories"
+  },
+  {
+    "id": 5,
+    "name": "Books & Stationery"
+  },
+  {
+    "id": 6,
+    "name": "Tumblers & Personal Items"
+  },
+  {
+    "id": 7,
+    "name": "Others"
+  }
+]

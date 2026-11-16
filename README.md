@@ -7,7 +7,7 @@ A full-stack web application that connects students who have lost their belongin
 ### 1. Public Report Listing & Details
 - Display all Lost and Found reports publicly.
 - Provide a dedicated detail page for each report.
-### 2. Filtering Category
+### 2. Category Filtering
 - Allow users to filter reports by clicking on available category tags.
 ### 3. Report Submission
 - Provide a form for submitting Lost or Found reports, including an optional photo upload.
@@ -36,7 +36,6 @@ A full-stack web application that connects students who have lost their belongin
 ## 6. Setup Instructions
 ### Prerequisites
 - Git
-- Node.js (if required)
 ### Installation
 1. Clone this repository.
    ```bash

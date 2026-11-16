@@ -40,6 +40,6 @@ A full-stack web application that connects students who have lost their belongin
 1. Clone this repository.
    ```bash
    git clone <repository-url>
-2. Navigate to the project directory
+2. Navigate to the project directory.
    ```bash
    cd lost-and-found-website

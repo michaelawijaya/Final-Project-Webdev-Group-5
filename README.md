@@ -15,7 +15,7 @@ A full-stack web application that connects students who have lost their belongin
 - Display only the contact method explicitly selected by the reporter for public visibility.
 
 ## 3. Technology Stack
-| Part | Technology |
+| Component | Technology |
 |---|---|
 | Frontend | HTML, CSS, JavaScript, React.js, Vite |
 | Backend | JavaScript, Node.js, Express.js |

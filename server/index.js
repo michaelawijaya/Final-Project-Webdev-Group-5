@@ -79,20 +79,59 @@ function toListItem(r) {
         createdAt: r.createdAt,
     };
 }
+/*
+toListItem():
+It lists the fields that will be returned for get /reports
+*/
+
+function isPubliclyVisible(r, now = new Date()) {
+    return r.status === "OPEN" && new Date(r.expiresAt) > now;
+}
+/*
+isPubliclyVisible():
+Checks if a report's status is open and it's not yet expired
+*/
+
+function toDetail(r) {
+    return {
+        id: r.id,
+        type: r.type,
+        itemName: r.itemName,
+        description: r.description,
+        category: { id: r.categoryId, name: categories[r.categoryId] ?? null },
+        location: { id: r.locationId, name: locations[r.locationId] ?? null },
+        locationDetail: r.locationDetail ?? null,
+        incidentDate: r.incidentDate,
+        imageUrl: r.imagePath ?? null,
+        reporterName: r.reporterName,
+        contactMethod: r.contactMethod,
+        contactValue: r.contactValue,
+    };
+}
+/*
+toDetail():
+Returns the fields for get /results/:id
+It's the same as toListItem() but has reporterName and contactMethod and no createdAt fields
+*/
 
 app.get("/api/results/:id", (req, res) => {
-    const { id } = req.params;
-    let result = {};
-    for (i of reports) {
-        if (i.id == id) {
-            result = i;
-        }
+    let id;
+    try {
+        id = parsePositiveInt(req.params, "id");
+    } catch (err) {
+        if (err instanceof BadRequest)
+            return res.status(400).json({ error: err.message });
+        throw err;
     }
-    console.log(result);
-    if (!result || Object.keys(result).length === 0) {
-        return res.status(404).json({ error: "Item not found" });
+
+    const report = reports.find((r) => r.id === id);
+
+    // Same 404 for "doesn't exist" and "not visible", so hidden reports can't be probed
+    if (!report || !isPubliclyVisible(report)) {
+        return res.status(404).json({ error: "Report not found" });
     }
-    res.send(result);
+
+    res.json(toDetail(report));
 });
 
 app.get("/api/results", (req, res) => {

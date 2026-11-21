@@ -202,13 +202,20 @@ function ReportSubmission() {
 
         <div className="form-group">
           <label>Photo (Optional)</label>
+
+          <label htmlFor="photo-upload" className="upload-box">
+            <span>📷</span>
+            <span>{photo ? photo.name : "Click to upload photo"}</span>
+            <small>JPEG, PNG, or WebP (Max. 5 MB)</small>
+          </label>
+
           <input
+            id="photo-upload"
             className="photo-input"
             type="file"
             accept="image/jpeg,image/png,image/webp"
             onChange={(e) => setPhoto(e.target.files[0])}
           />
-          {photo && <p>Selected Photo: {photo.name}</p>}
         </div>
       </section>
 

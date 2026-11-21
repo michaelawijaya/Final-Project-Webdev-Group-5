@@ -5,3 +5,14 @@
 
     margin : 20px;
 }
+
+.card-container {
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 20px;
+
+    margin : 20px;
+}

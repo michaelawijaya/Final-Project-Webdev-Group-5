@@ -2,7 +2,7 @@
   {
     "id": 1,
     "type": "LOST",
-    "itemName": "MacBook Air M2 13-inch Charger",
+    "itemName": "MacBook",
     "description": "Original Apple 35W Dual USB-C Port Compact Power Adapter in white with a slightly frayed braided MagSafe 3 cable and a small blue star sticker on the brick.",
     "categoryId": 1,
     "locationId": 2,
@@ -20,7 +20,7 @@
   {
     "id": 2,
     "type": "FOUND",
-    "itemName": "Black Leather Cardholder",
+    "itemName": "Cardholder",
     "description": "Slim matte black leather cardholder containing a student KTM card (initials A.N.), a Flazz BCA card, and a folded receipt.",
     "categoryId": 2,
     "locationId": 2,
@@ -38,7 +38,7 @@
   {
     "id": 3,
     "type": "FOUND",
-    "itemName": "Honda Vario Keychain & Smart Key",
+    "itemName": "Keychain & Smart Key",
     "description": "Black Honda smart key fob attached to a red woven lanyard with a miniature stainless steel carabiner.",
     "categoryId": 3,
     "locationId": 6,
@@ -56,7 +56,7 @@
   {
     "id": 4,
     "type": "LOST",
-    "itemName": "Corkcicle Canteen Tumbler 16oz",
+    "itemName": " Tumbler 16oz",
     "description": "Matte navy blue stainless steel tumbler with a black screw-on cap and a small dent near the bottom rim.",
     "categoryId": 6,
     "locationId": 3,
@@ -74,7 +74,7 @@
   {
     "id": 5,
     "type": "LOST",
-    "itemName": "Sony WH-1000XM4 Wireless Headphones",
+    "itemName": "Wireless Headphones",
     "description": "Silver over-ear noise-cancelling headphones inside a dark grey fabric hard carrying case with an airplane adapter.",
     "categoryId": 1,
     "locationId": 5,
@@ -92,7 +92,7 @@
   {
     "id": 6,
     "type": "FOUND",
-    "itemName": "Uniqlo Navy Zip-Up Hoodie (Size L)",
+    "itemName": "Zip-Up Hoodie",
     "description": "Dark navy cotton zip-up hoodie left on the wooden bench outside the main prayer hall.",
     "categoryId": 4,
     "locationId": 7,
@@ -110,7 +110,7 @@
   {
     "id": 7,
     "type": "LOST",
-    "itemName": "Introduction to Algorithms (CLRS) Textbook",
+    "itemName": "Textbook",
     "description": "4th Edition paperback with yellow sticky notes on Chapters 4 and 15, and name written on the inside cover.",
     "categoryId": 5,
     "locationId": 4,
@@ -128,7 +128,7 @@
   {
     "id": 8,
     "type": "FOUND",
-    "itemName": "Logitech MX Master 3S Mouse",
+    "itemName": "Logitech Mouse",
     "description": "Graphite wireless ergonomic mouse without USB receiver, found plugged into a monitor dock.",
     "categoryId": 1,
     "locationId": 1,
@@ -146,7 +146,7 @@
   {
     "id": 9,
     "type": "LOST",
-    "itemName": "Prescription Eyeglasses in Brown Case",
+    "itemName": "Prescription Eyeglasses",
     "description": "Tortoiseshell rectangular frame glasses inside a hard brown faux-leather clamshell case with a grey microfiber cloth.",
     "categoryId": 4,
     "locationId": 2,
@@ -164,7 +164,26 @@
   {
     "id": 10,
     "type": "FOUND",
-    "itemName": "Foldable Black Umbrella",
+    "itemName": "Black Umbrella",
+    "description": "Automatic compact black umbrella with a wooden handle and wrist strap.",
+    "categoryId": 7,
+    "locationId": 1,
+    "locationDetail": "Lobby umbrella stand",
+    "incidentDate": "2026-11-11T17:15:00.000Z",
+    "imagePath": null,
+    "reporterName": "Citra Lestari",
+    "contactMethod": "PHONE",
+    "contactValue": "+62-813-9876-5432",
+    "createdAt": "2026-11-11T18:00:00.000Z",
+    "status": "REMOVED",
+    "expiresAt": "2026-12-11T18:00:00.000Z",
+    "manageTokenHash": "afe1e57f529253dc5cff56a5a1f29ec517909994fbb7cc1dfd453a80311f0a55"
+  },
+
+  {
+    "id": 10,
+    "type": "FOUND",
+    "itemName": "Black Umbrella",
     "description": "Automatic compact black umbrella with a wooden handle and wrist strap.",
     "categoryId": 7,
     "locationId": 1,

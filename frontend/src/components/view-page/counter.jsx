@@ -9,7 +9,7 @@ const Counter = () => {
         viewBox="0 0 200 200" 
         fill="none"
         xmlns="http://www.w3.org/2000/svg" 
-        className="absolute inset-0 w-full h-full p-4 blur-sm opacity-100 group-hover:opacity-50 group-hover:blur-none group-hover:scale-105 duration-500 z-10 text-[#6D4E3D]"
+        className="absolute inset-0 w-full h-full p-4 blur-[5px] opacity-100 group-hover:opacity-50 group-hover:blur-none group-hover:scale-105 duration-500 z-10 text-[#6D4E3D]"
       >
      
         <path 

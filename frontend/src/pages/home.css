@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+body {
+    background-color: #ffffff;
+}
+
+.home-header h1 {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-weight: bolder;
+}
+
+.option-card h2 {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-weight: 600;
+}
+
+.home-page {
+    font-family: 'Poppins', sans-serif;
+}
+
+.home-options {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    max-width: 900px;
+    margin: 50px auto;
+    padding: 0 20px;
+}
+
+.option-card {
+    flex: 1;
+    text-decoration: none;
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid #e5d8d0;
+}
+
+.option-button {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 10px 20px;
+    background-color: #6b4535;
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: background-color 0.4s ease;
+}
+
+.option-card p {
+    min-height: 60px;
+}
+
+.option-button:hover {
+    background-color: #89634f;
+}
+
+.home-header h1,
+.hero-section h2,
+.hero-section p,
+.option-card h2,
+.option-card p {
+    color: #6b4535;
+}
+
+@media (max-width: 600px) {
+    .home-options {
+        flex-direction: column;
+        gap: 20px;
+    }
+}

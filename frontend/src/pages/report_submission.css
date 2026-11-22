@@ -1,3 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+.form-section h2 {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+}
+
+.form-group label {
+    font-family: 'Poppins', sans-serif;
+}
+
 .report-form {
     width: 100%;
     max-width: 700px;

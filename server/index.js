@@ -14,7 +14,21 @@ const locations = Object.fromEntries(
     require("../mock-data/locations.json").map((l) => [l.id, l.name]),
 );
 
-class BadRequest extends Error {}
+class HttpError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
+class BadRequest extends HttpError {
+  constructor(message) { super(400, message); }
+}
+class NotFound extends HttpError {
+  constructor(message = "Not found") { super(404, message); }
+}
+
+// Forwards rejected promises to the error middleware (needed on Express 4, harmless on 5)
+const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 /*
 BadRequest is needed instead of simply throwing Error to know that the error came specfically from the request
 */

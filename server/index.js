@@ -112,8 +112,8 @@ toListItem():
 It lists the fields that will be returned for get /reports
 */
 
-function isPubliclyVisible(r, now = new Date()) {
-    return r.status === "OPEN" && new Date(r.expiresAt) > now;
+function isPubliclyVisible(r) {
+  return r.status === "OPEN" && new Date(r.expiresAt) > new Date();
 }
 /*
 isPubliclyVisible():
@@ -150,17 +150,13 @@ const uploadPhoto = multer({
 
 // Turns multer's own errors (too large, wrong field name) into 400s
 function handleUpload(req, res, next) {
-    uploadPhoto(req, res, (err) => {
-        if (err instanceof multer.MulterError) {
-            const msg =
-                err.code === "LIMIT_FILE_SIZE"
-                    ? "photo must be 5 MB or smaller"
-                    : "invalid file upload";
-            return res.status(400).json({ error: msg });
-        }
-        if (err) return next(err);
-        next();
-    });
+  uploadPhoto(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      const msg = err.code === "LIMIT_FILE_SIZE" ? "photo must be 5 MB or smaller" : "invalid file upload";
+      return next(new BadRequest(msg)); // was: res.status(400).json(...)
+    }
+    next(err); // undefined when there's no error
+  });
 }
 
 function parseString(body, key, { required = false, max }) {

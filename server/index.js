@@ -7,13 +7,18 @@ const app = express();
 const port = 3000;
 
 const reports = require("../mock-data/reports.json");
-const categories = require("../mock-data/categories.json");
-const locations = require("../mock-data/locations.json");
+const categories = Object.fromEntries(
+    require("../mock-data/categories.json").map((c) => [c.id, c.name]),
+);
+const locations = Object.fromEntries(
+    require("../mock-data/locations.json").map((l) => [l.id, l.name]),
+);
 
 class BadRequest extends Error {}
 /*
-BadRequest is needed instead of simply throwing Error to know if the error came specfically from the request
+BadRequest is needed instead of simply throwing Error to know that the error came specfically from the request
 */
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const MAX_LIMIT = 50;
@@ -22,7 +27,7 @@ const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 const CONTACT_METHODS = ["LINE", "PHONE", "WHATSAPP", "EMAIL", "DISCORD"];
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 
-function getQueryValue(query, key) {
+function getSingle(query, key) {
     const value = query[key];
     if (value === undefined) return undefined;
     if (typeof value !== "string")
@@ -31,7 +36,7 @@ function getQueryValue(query, key) {
 }
 
 /*
-getQueryValue():
+getSingle():
 1. query is equal to the query object { type: "LOST", page: "2" }
 2. query[key] effectively means query["type"] for example
 3. checks if value is anything but string like undefined or an array (has more than one value such as when given type=LOST&type=FOUND)
@@ -39,7 +44,7 @@ getQueryValue():
 */
 
 function parsePositiveInt(query, key) {
-    const value = getQueryValue(query, key);
+    const value = getSingle(query, key);
     if (value === undefined) return undefined;
     if (!/^[1-9]\d*$/.test(value))
         throw new BadRequest(`${key} must be a positive integer`);
@@ -48,12 +53,12 @@ function parsePositiveInt(query, key) {
 
 /*
 parsePositiveInt():
-Pretty much does the same check for getQueryValue() but for integers
+Pretty much does the same check for getSingle() but for integers
 It returns the param's value as integers
 */
 
 function parseDate(query, key) {
-    const value = getQueryValue(query, key);
+    const value = getSingle(query, key);
     if (value === undefined) return undefined;
     const d = new Date(`${value}T00:00:00.000Z`);
 
@@ -145,7 +150,7 @@ function handleUpload(req, res, next) {
 }
 
 function parseString(body, key, { required = false, max }) {
-    const v = getQueryValue(body, key)?.trim();
+    const v = getSingle(body, key)?.trim();
     if (!v) {
         if (required) throw new BadRequest(`${key} is required`);
         return null;
@@ -156,7 +161,7 @@ function parseString(body, key, { required = false, max }) {
 }
 
 function parseEnum(body, key, allowed) {
-    const v = getQueryValue(body, key);
+    const v = getSingle(body, key);
     if (!allowed.includes(v))
         throw new BadRequest(`${key} must be one of: ${allowed.join(", ")}`);
     return v;
@@ -344,7 +349,7 @@ app.get("/api/results/:id", (req, res) => {
 app.get("/api/results", (req, res) => {
     let filters;
     try {
-        const type = getQueryValue(req.query, "type");
+        const type = getSingle(req.query, "type");
         if (type !== undefined && type !== "LOST" && type !== "FOUND") {
             throw new BadRequest("type must be LOST or FOUND");
         }

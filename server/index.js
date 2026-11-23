@@ -357,77 +357,44 @@ app.get("/api/results/:id", (req, res) => {
 });
 
 app.get("/api/results", (req, res) => {
-    let filters;
-    try {
-        const type = getSingle(req.query, "type");
-        if (type !== undefined && type !== "LOST" && type !== "FOUND") {
-            throw new BadRequest("type must be LOST or FOUND");
-        }
-        // handles the type param, make sure it's between the two values
+  const type = getSingle(req.query, "type");
+  if (type !== undefined && type !== "LOST" && type !== "FOUND") {
+    throw new BadRequest("type must be LOST or FOUND");
+  }
+  const dateFrom = parseDate(req.query, "dateFrom");
+  const dateTo = parseDate(req.query, "dateTo");
+  if (dateFrom && dateTo && dateTo < dateFrom) {
+    throw new BadRequest("dateTo must not be earlier than dateFrom");
+  }
+  const categoryId = parsePositiveInt(req.query, "categoryId");
+  const locationId = parsePositiveInt(req.query, "locationId");
+  const page = parsePositiveInt(req.query, "page") ?? 1;
+  const limit = Math.min(parsePositiveInt(req.query, "limit") ?? 20, MAX_LIMIT);
 
-        const dateFrom = parseDate(req.query, "dateFrom");
-        const dateTo = parseDate(req.query, "dateTo");
-        if (dateFrom && dateTo && dateTo < dateFrom) {
-            throw new BadRequest("dateTo must not be earlier than dateFrom");
-        }
-        // handles the date params, make sure they're inputted appropriate values
+  const dateToExclusive = dateTo && new Date(dateTo.getTime() + 24 * 60 * 60 * 1000);
 
-        filters = {
-            type,
-            categoryId: parsePositiveInt(req.query, "categoryId"),
-            locationId: parsePositiveInt(req.query, "locationId"),
-            dateFrom,
-            dateTo,
-            page: parsePositiveInt(req.query, "page") ?? 1,
-            limit: Math.min(
-                parsePositiveInt(req.query, "limit") ?? 20,
-                MAX_LIMIT,
-            ),
-        };
-    } catch (err) {
-        if (err instanceof BadRequest)
-            return res.status(400).json({ error: err.message });
-        throw err;
-    }
-
-    const { type, categoryId, locationId, dateFrom, dateTo, page, limit } =
-        filters;
-
-    const dateToExclusive =
-        dateTo && new Date(dateTo.getTime() + 24 * 60 * 60 * 1000);
-
-    const filtered = reports.filter((r) => {
-        const incident = new Date(r.incidentDate);
-        return (
-            (!type || r.type === type) &&
-            (!categoryId || r.categoryId === categoryId) &&
-            (!locationId || r.locationId === locationId) &&
-            (!dateFrom || incident >= dateFrom) &&
-            (!dateToExclusive || incident < dateToExclusive)
-        );
+  const filtered = reports
+    .filter(isPubliclyVisible) // NEW: list and detail now agree on what's public
+    .filter((r) => {
+      const incident = new Date(r.incidentDate);
+      return (
+        (!type || r.type === type) &&
+        (!categoryId || r.categoryId === categoryId) &&
+        (!locationId || r.locationId === locationId) &&
+        (!dateFrom || incident >= dateFrom) &&
+        (!dateToExclusive || incident < dateToExclusive)
+      );
     });
-    // filters matching reports
 
-    filtered.sort((a, b) => {
-        const diff = new Date(b.createdAt) - new Date(a.createdAt);
-        return diff !== 0 ? diff : b.id - a.id;
-    });
-    // sorts the reports based on date
+  filtered.sort((a, b) => {
+    const diff = new Date(b.createdAt) - new Date(a.createdAt);
+    return diff !== 0 ? diff : b.id - a.id;
+  });
 
-    const total = filtered.length;
-    const data = filtered
-        .slice((page - 1) * limit, page * limit)
-        .map(toListItem);
+  const total = filtered.length;
+  const data = filtered.slice((page - 1) * limit, page * limit).map(toListItem);
 
-    res.json({
-        data,
-        pagination: {
-            page,
-            limit,
-            total,
-            totalPages: Math.ceil(total / limit),
-        },
-    });
+  res.json({ data, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
 });
 
 app.listen(port, () => {

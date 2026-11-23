@@ -405,6 +405,19 @@ app.get("/api/results", (req, res) => {
     });
 });
 
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
+
+// Error middleware needs all 4 parameters to be recognized by Express
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  if (err instanceof HttpError) return res.status(err.status).json({ error: err.message });
+  if (err.type === "entity.parse.failed") return res.status(400).json({ error: "Malformed JSON body" }); // only matters once you add express.json()
+  console.error(err); // full detail stays in the server log
+  res.status(500).json({ error: "Internal server error" });
+});
+
 app.listen(port, () => {
     console.log("Listening");
 });

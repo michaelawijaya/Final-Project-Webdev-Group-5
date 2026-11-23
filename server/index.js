@@ -15,20 +15,25 @@ const locations = Object.fromEntries(
 );
 
 class HttpError extends Error {
-  constructor(status, message) {
-    super(message);
-    this.status = status;
-  }
+    constructor(status, message) {
+        super(message);
+        this.status = status;
+    }
 }
 class BadRequest extends HttpError {
-  constructor(message) { super(400, message); }
+    constructor(message) {
+        super(400, message);
+    }
 }
 class NotFound extends HttpError {
-  constructor(message = "Not found") { super(404, message); }
+    constructor(message = "Not found") {
+        super(404, message);
+    }
 }
 
 // Forwards rejected promises to the error middleware (needed on Express 4, harmless on 5)
-const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+const asyncHandler = (fn) => (req, res, next) =>
+    Promise.resolve(fn(req, res, next)).catch(next);
 /*
 BadRequest is needed instead of simply throwing Error to know that the error came specfically from the request
 */
@@ -113,7 +118,7 @@ It lists the fields that will be returned for get /reports
 */
 
 function isPubliclyVisible(r) {
-  return r.status === "OPEN" && new Date(r.expiresAt) > new Date();
+    return r.status === "OPEN" && new Date(r.expiresAt) > new Date();
 }
 /*
 isPubliclyVisible():
@@ -150,13 +155,16 @@ const uploadPhoto = multer({
 
 // Turns multer's own errors (too large, wrong field name) into 400s
 function handleUpload(req, res, next) {
-  uploadPhoto(req, res, (err) => {
-    if (err instanceof multer.MulterError) {
-      const msg = err.code === "LIMIT_FILE_SIZE" ? "photo must be 5 MB or smaller" : "invalid file upload";
-      return next(new BadRequest(msg)); // was: res.status(400).json(...)
-    }
-    next(err); // undefined when there's no error
-  });
+    uploadPhoto(req, res, (err) => {
+        if (err instanceof multer.MulterError) {
+            const msg =
+                err.code === "LIMIT_FILE_SIZE"
+                    ? "photo must be 5 MB or smaller"
+                    : "invalid file upload";
+            return next(new BadRequest(msg)); // was: res.status(400).json(...)
+        }
+        next(err); // undefined when there's no error
+    });
 }
 
 function parseString(body, key, { required = false, max }) {
@@ -219,8 +227,10 @@ function toCreated(r) {
     };
 }
 
-app.post("/api/results", handleUpload, async (req, res, next) => {
-    try {
+app.post(
+    "/api/results",
+    handleUpload,
+    asyncHandler(async (req, res) => {
         const body = req.body ?? {};
 
         const type = parseEnum(body, "type", ["LOST", "FOUND"]);
@@ -329,59 +339,70 @@ app.post("/api/results", handleUpload, async (req, res, next) => {
         res.status(201)
             .set("Cache-Control", "no-store")
             .json({ report: toCreated(record), manageToken });
-    } catch (err) {
-        if (err instanceof BadRequest)
-            return res.status(400).json({ error: err.message });
-        next(err);
-    }
-});
+    }),
+);
 
 app.get("/api/results/:id", (req, res) => {
-  const id = parsePositiveInt(req.params, "id");
-  const report = reports.find((r) => r.id === id);
-  if (!report || !isPubliclyVisible(report)) throw new NotFound("Report not found");
-  res.json(toDetail(report));
+    const id = parsePositiveInt(req.params, "id");
+    const report = reports.find((r) => r.id === id);
+    if (!report || !isPubliclyVisible(report))
+        throw new NotFound("Report not found");
+    res.json(toDetail(report));
 });
 
 app.get("/api/results", (req, res) => {
-  const type = getSingle(req.query, "type");
-  if (type !== undefined && type !== "LOST" && type !== "FOUND") {
-    throw new BadRequest("type must be LOST or FOUND");
-  }
-  const dateFrom = parseDate(req.query, "dateFrom");
-  const dateTo = parseDate(req.query, "dateTo");
-  if (dateFrom && dateTo && dateTo < dateFrom) {
-    throw new BadRequest("dateTo must not be earlier than dateFrom");
-  }
-  const categoryId = parsePositiveInt(req.query, "categoryId");
-  const locationId = parsePositiveInt(req.query, "locationId");
-  const page = parsePositiveInt(req.query, "page") ?? 1;
-  const limit = Math.min(parsePositiveInt(req.query, "limit") ?? 20, MAX_LIMIT);
+    const type = getSingle(req.query, "type");
+    if (type !== undefined && type !== "LOST" && type !== "FOUND") {
+        throw new BadRequest("type must be LOST or FOUND");
+    }
+    const dateFrom = parseDate(req.query, "dateFrom");
+    const dateTo = parseDate(req.query, "dateTo");
+    if (dateFrom && dateTo && dateTo < dateFrom) {
+        throw new BadRequest("dateTo must not be earlier than dateFrom");
+    }
+    const categoryId = parsePositiveInt(req.query, "categoryId");
+    const locationId = parsePositiveInt(req.query, "locationId");
+    const page = parsePositiveInt(req.query, "page") ?? 1;
+    const limit = Math.min(
+        parsePositiveInt(req.query, "limit") ?? 20,
+        MAX_LIMIT,
+    );
 
-  const dateToExclusive = dateTo && new Date(dateTo.getTime() + 24 * 60 * 60 * 1000);
+    const dateToExclusive =
+        dateTo && new Date(dateTo.getTime() + 24 * 60 * 60 * 1000);
 
-  const filtered = reports
-    .filter(isPubliclyVisible) // NEW: list and detail now agree on what's public
-    .filter((r) => {
-      const incident = new Date(r.incidentDate);
-      return (
-        (!type || r.type === type) &&
-        (!categoryId || r.categoryId === categoryId) &&
-        (!locationId || r.locationId === locationId) &&
-        (!dateFrom || incident >= dateFrom) &&
-        (!dateToExclusive || incident < dateToExclusive)
-      );
+    const filtered = reports
+        .filter(isPubliclyVisible) // NEW: list and detail now agree on what's public
+        .filter((r) => {
+            const incident = new Date(r.incidentDate);
+            return (
+                (!type || r.type === type) &&
+                (!categoryId || r.categoryId === categoryId) &&
+                (!locationId || r.locationId === locationId) &&
+                (!dateFrom || incident >= dateFrom) &&
+                (!dateToExclusive || incident < dateToExclusive)
+            );
+        });
+
+    filtered.sort((a, b) => {
+        const diff = new Date(b.createdAt) - new Date(a.createdAt);
+        return diff !== 0 ? diff : b.id - a.id;
     });
 
-  filtered.sort((a, b) => {
-    const diff = new Date(b.createdAt) - new Date(a.createdAt);
-    return diff !== 0 ? diff : b.id - a.id;
-  });
+    const total = filtered.length;
+    const data = filtered
+        .slice((page - 1) * limit, page * limit)
+        .map(toListItem);
 
-  const total = filtered.length;
-  const data = filtered.slice((page - 1) * limit, page * limit).map(toListItem);
-
-  res.json({ data, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+    res.json({
+        data,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+        },
+    });
 });
 
 app.listen(port, () => {

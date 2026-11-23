@@ -337,23 +337,10 @@ app.post("/api/results", handleUpload, async (req, res, next) => {
 });
 
 app.get("/api/results/:id", (req, res) => {
-    let id;
-    try {
-        id = parsePositiveInt(req.params, "id");
-    } catch (err) {
-        if (err instanceof BadRequest)
-            return res.status(400).json({ error: err.message });
-        throw err;
-    }
-
-    const report = reports.find((r) => r.id === id);
-
-    // Same 404 for "doesn't exist" and "not visible", so hidden reports can't be probed
-    if (!report || !isPubliclyVisible(report)) {
-        return res.status(404).json({ error: "Report not found" });
-    }
-
-    res.json(toDetail(report));
+  const id = parsePositiveInt(req.params, "id");
+  const report = reports.find((r) => r.id === id);
+  if (!report || !isPubliclyVisible(report)) throw new NotFound("Report not found");
+  res.json(toDetail(report));
 });
 
 app.get("/api/results", (req, res) => {

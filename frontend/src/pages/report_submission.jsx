@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import categories from "../../../mock-data/categories.json";
 import locations from "../../../mock-data/locations.json";
 import "./report_submission.css";
@@ -15,6 +15,21 @@ function ReportSubmission() {
   const today = new Date();
   const maxDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   const [photo, setPhoto] = useState(null);
+
+  const [photoPreview, setPhotoPreview] = useState("");
+
+  useEffect(() => {
+    if (!photo) {
+      setPhotoPreview("");
+      return;
+    }
+
+    const imageUrl = URL.createObjectURL(photo);
+    setPhotoPreview(imageUrl);
+
+    return () => URL.revokeObjectURL(imageUrl);
+  }, [photo]);
+
   const [reporterName, setReporterName] = useState("");
   const [contactMethod, setContactMethod] = useState("");
   const [contactValue, setContactValue] = useState("");
@@ -36,6 +51,16 @@ function ReportSubmission() {
       return;
     }
 
+    if (!incidentDate) {
+      alert("Please select the incident date!");
+      return;
+    }
+
+    if (!location) {
+      alert("Please select a location!");
+      return;
+    }
+
     if (photo && photo.size > 5 * 1024 * 1024) {
       alert("Photo must not exceed 5 MB!");
       return;
@@ -50,6 +75,11 @@ function ReportSubmission() {
 
     if (!reporterName.trim()) {
       alert("Reporter name cannot be empty!");
+      return;
+    }
+
+    if (!contactMethod) {
+      alert("Please select a contact method!");
       return;
     }
 
@@ -92,6 +122,29 @@ function ReportSubmission() {
     const cleanReporterName = reporterName.trim();
     const cleanContactValue = contactValue.trim();
 
+    const formData = new FormData();
+
+    formData.append("type", reportType);
+    formData.append("itemName", cleanItemName);
+    formData.append("description", cleanDescription);
+    formData.append("categoryId", category);
+    formData.append("locationId", location);
+    if (cleanLocationDetail) {
+      formData.append("locationDetail", cleanLocationDetail);
+    }
+    formData.append("incidentDate", incidentDate);
+    formData.append("reporterName", cleanReporterName);
+    formData.append("contactMethod", contactMethod);
+    formData.append("contactValue", cleanContactValue);
+
+    if (photo) {
+      formData.append("photo", photo);
+    }
+
+    for (const [key, value] of formData.entries()) {
+      console.log(key, value);
+    }
+
     console.log({
       reportType,
       cleanItemName,
@@ -105,6 +158,8 @@ function ReportSubmission() {
       contactMethod,
       cleanContactValue
     });
+
+    alert("Form validation successful! Your report is ready to be submitted.");
   };
 
   return (
@@ -202,6 +257,25 @@ function ReportSubmission() {
 
         <div className="form-group">
           <label>Photo (Optional)</label>
+
+          {photoPreview && (
+            <div className="photo-preview">
+              <img src={photoPreview} alt="Selected item preview" />
+            </div>
+          )}
+
+          {photo && (
+            <button
+              type="button"
+              className="remove-photo-button"
+              onClick={() => {
+                setPhoto(null);
+                document.getElementById("photo-upload").value = "";
+              }}
+            >
+              Remove Photo
+            </button>
+          )}
 
           <label htmlFor="photo-upload" className="upload-box">
             <span>📷</span>

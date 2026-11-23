@@ -14,14 +14,6 @@ function Footer() {
 
   return (
     <>
-      
-      <nav>
-        <Link to="/views">Views</Link> 
-      </nav>
-
-      <Routes>
-         <Route path="/views" element={<View />} />
-      </Routes>
 
 
       <section id="center">

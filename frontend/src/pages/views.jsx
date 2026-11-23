@@ -5,6 +5,7 @@ import reports from "../../../mock-data/reports.json"
 // components
 import Card from '../components/view-page/card.jsx'
 import Counter from '../components/view-page/counter.jsx'
+import Searchbar from '../components/view-page/searchbar.jsx'
 // styles
 import "./views.css"
 
@@ -14,24 +15,18 @@ function View() {
 
   return (
     <>
+      <div class="searchbar-container">
+        <Searchbar />
+      </div>
       <div class="counter-container">
         <Counter/>
       </div>
 
       <div class="card-container">
         {reports.map((report) => (
-          <Card key={report.id} name={report.itemName}/>
+          <Card key={report.id} name={report.itemName} img={report.imagePath} />
         ))}
       </div>
-
-      <ul>
-        {reports.map((report) => (
-          <li key={report.id}>
-            <h2>{report.title}</h2>
-            <p>{report.description}</p>
-          </li>
-        ))}
-      </ul>
     </>
   )
 }

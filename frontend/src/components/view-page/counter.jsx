@@ -3,7 +3,7 @@ import reports from "../../../../mock-data/reports.json";
 
 const Counter = () => {
   return (
-    <div className="hover:-translate-y-2 group bg-neutral-50 duration-500 w-full h-48 flex text-neutral-600 flex-col justify-center items-center relative rounded-xl overflow-hidden shadow-md">
+    <div className=" hover:-translate-y-2 group bg-neutral-50 duration-500 w-full h-48 flex text-neutral-600 flex-col justify-center items-center relative rounded-xl overflow-hidden shadow-md">
 
       <svg 
         viewBox="0 0 200 200" 

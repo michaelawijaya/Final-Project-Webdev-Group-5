@@ -21,18 +21,22 @@ const Searchbar = ({value, onChange}) => {
 }
 
 const StyledWrapper = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+
   .group {
     display: flex;
     line-height: 28px;
     align-items: center;
     position: relative;
-    max-width: 190px;
+    width: 100%;
+    max-width: 600px; /* Ubah angka ini sesuai batas lebar maksimal yang diinginkan (misal 700px atau 800px) */
   }
 
   .input {
     width: 100%;
-    max-width : 800px
-    height: 40px;
+    height: 44px;
     line-height: 28px;
     padding: 0 1rem;
     padding-left: 2.5rem;
@@ -42,6 +46,7 @@ const StyledWrapper = styled.div`
     background-color: #f3f3f4;
     color: #0d0c22;
     transition: 0.3s ease;
+    box-sizing: border-box; /* Mencegah padding membuat input melebar keluar layar HP */
   }
 
   .input::placeholder {
@@ -49,7 +54,7 @@ const StyledWrapper = styled.div`
   }
 
   .input:focus,
-  input:hover {
+  .input:hover {
     outline: none;
     border-color: rgb(124, 64, 0);
     background-color: #fff;
@@ -63,6 +68,8 @@ const StyledWrapper = styled.div`
     fill: #9e9ea7;
     width: 1rem;
     height: 1rem;
-  }`;
+    pointer-events: none;
+  }
+`;
 
 export default Searchbar;

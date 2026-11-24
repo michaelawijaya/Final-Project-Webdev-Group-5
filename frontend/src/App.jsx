@@ -14,6 +14,7 @@ function App() {
       <Route path="/manage/:token" element={<ManageReport />} />
       <Route path="/details/:id" element={<Details />} />
     </Routes>
+    
   );
 }
 

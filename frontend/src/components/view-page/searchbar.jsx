@@ -53,7 +53,7 @@ const StyledWrapper = styled.div`
     outline: none;
     border-color: rgb(124, 64, 0);
     background-color: #fff;
-    border-width: 3px;
+    border-width: 2px;
     box-shadow: 0 0 0 4px rgb(247 127 0 / 10%);
   }
 

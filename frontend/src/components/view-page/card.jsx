@@ -108,25 +108,47 @@ const StyledWrapper = styled.div`
   }
 
   .cart-button {
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.25rem;
+  padding: 15px 30px;
+  border: 2px solid #2c2c2c;
+  background-color: #ffffff;
+  color: #000000;
+  font-size: 1.2rem;
+  cursor: pointer;
+  border-radius: 30px;
+  transition: all 0.4s ease;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+  font-weight: bold;
+}
 
-    padding: 0.5rem;
-    width: 100%;
-    background-image: var(--bg-linear);
+.cart-button::after {
+  content: "";
+  position: absolute;
+  color : #ffffff;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle,
+    rgba(131, 46, 0, 0.25) 0%,
+    rgba(255, 119, 0, 0) 70%
+  );
+  transform: scale(0);
+  transition: transform 0.5s ease;
+}
 
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--light);
-    text-wrap: nowrap;
+.cart-button:hover::after {
+  transform: scale(4);
+  color: #ffffff;;
+}
 
-    border: 2px solid hsla(34, 97%, 11%, 0.50);
-    border-radius: 0.5rem;
-    box-shadow: inset 0 0 0.25rem 1px var(--light);
-  }
+.cart-button:hover {
+  border-color: #666666;
+  background: #292929;
+  color: #ffffff;;
+}
 `;
 
 export default Card;

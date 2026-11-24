@@ -20,6 +20,7 @@ function View() {
 
   return (
     <>
+    
       <div class="searchbar-container">
         <Searchbar 
          value={searchQuary}
@@ -40,7 +41,7 @@ function View() {
         ) : (
           <div class="not-found-container">
             <p>No Reports were found.</p>
-            <Link to="/report-submission" className="lost-report">Submit lost report</Link>
+            <Link to="/report-submission" className="lost-report">Submit a report</Link>
           </div>
         )}
       </div>

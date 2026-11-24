@@ -3,6 +3,11 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import reports from "../../../mock-data/reports.json";
 
+import Pic from "../components/details-page/picture";
+import Info from "../components/details-page/info";
+
+import "./details.css";
+
 function Details() {
     const {id} = useParams();
     const report = reports.find((item) => String(item.id) === id);
@@ -13,21 +18,23 @@ function Details() {
     if (!report) return <p>report not found or been recently removed</p>
 
 	return (
-		<main className="details-page">
-			<header className="details-page__header">
-				<h1>Details</h1>
-				<p>Explore the information on this page.</p>
+		<>
+        
+        <main>
+            <div class="main-container">
 
-			</header>
+                <Pic
+                    img={report.imagePath}
+                    tapeText= {report.type}
+                />
 
-			<section className="details-page__content" aria-label="Details">
-				{/* Add details page content here. */}
+                <Info
+                    report={report}
+                />
 
-
-                <p> Tes nama = {report.itemName}
-                    Tes Desc = {report.description} </p>
-			</section>
-		</main>
+            </div>
+        </main>
+        </>
 	);
 }
 

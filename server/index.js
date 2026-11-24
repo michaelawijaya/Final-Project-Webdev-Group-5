@@ -419,6 +419,17 @@ app.patch(
     }),
 );
 
+app.get("/api/manage/:token", (req, res) => {
+    const { token } = req.params;
+    const report = reports.find((e) => {
+        return e.manageTokenHash === token;
+    });
+    if (!report || !isPubliclyVisible(report))
+        throw new NotFound("Report not found");
+    res.json(toDetail(report));
+});
+
+
 app.get("/api/results/:id", (req, res) => {
     const id = parsePositiveInt(req.params, "id");
     const report = reports.find((r) => r.id === id);

@@ -158,69 +158,109 @@ It's the same as toListItem() but has reporterName and contactMethod and no crea
 // partial=false (POST): every required field must be present.
 // partial=true (PATCH): absent fields are skipped, so the result holds only what was sent.
 function parseReportFields(body, { partial }) {
-  const out = {};
-  const sent = (key) => !partial || body[key] !== undefined;
+    const out = {};
+    const sent = (key) => !partial || body[key] !== undefined;
 
-  if (sent("type")) out.type = parseEnum(body, "type", ["LOST", "FOUND"]);
-  if (sent("itemName")) out.itemName = parseString(body, "itemName", { required: true, max: 100 });
-  if (sent("description")) out.description = parseString(body, "description", { required: true, max: 1000 });
+    if (sent("type")) out.type = parseEnum(body, "type", ["LOST", "FOUND"]);
+    if (sent("itemName"))
+        out.itemName = parseString(body, "itemName", {
+            required: true,
+            max: 100,
+        });
+    if (sent("description"))
+        out.description = parseString(body, "description", {
+            required: true,
+            max: 1000,
+        });
 
-  if (sent("categoryId")) {
-    const id = requirePresent(parsePositiveInt(body, "categoryId"), "categoryId");
-    if (categories[id] === undefined) throw new BadRequest("categoryId does not reference an existing category");
-    out.categoryId = id;
-  }
-  if (sent("locationId")) {
-    const id = requirePresent(parsePositiveInt(body, "locationId"), "locationId");
-    if (locations[id] === undefined) throw new BadRequest("locationId does not reference an existing location");
-    out.locationId = id;
-  }
+    if (sent("categoryId")) {
+        const id = requirePresent(
+            parsePositiveInt(body, "categoryId"),
+            "categoryId",
+        );
+        if (categories[id] === undefined)
+            throw new BadRequest(
+                "categoryId does not reference an existing category",
+            );
+        out.categoryId = id;
+    }
+    if (sent("locationId")) {
+        const id = requirePresent(
+            parsePositiveInt(body, "locationId"),
+            "locationId",
+        );
+        if (locations[id] === undefined)
+            throw new BadRequest(
+                "locationId does not reference an existing location",
+            );
+        out.locationId = id;
+    }
 
-  // In PATCH, sending locationDetail="" clears it to null
-  if (sent("locationDetail")) out.locationDetail = parseString(body, "locationDetail", { max: 255 });
+    // In PATCH, sending locationDetail="" clears it to null
+    if (sent("locationDetail"))
+        out.locationDetail = parseString(body, "locationDetail", { max: 255 });
 
-  if (sent("incidentDate")) {
-    const d = requirePresent(parseDate(body, "incidentDate"), "incidentDate");
-    const todayJakarta = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
-    if (d.toISOString().slice(0, 10) > todayJakarta) throw new BadRequest("incidentDate must not be in the future");
-    out.incidentDate = d.toISOString();
-  }
+    if (sent("incidentDate")) {
+        const d = requirePresent(
+            parseDate(body, "incidentDate"),
+            "incidentDate",
+        );
+        const todayJakarta = new Date().toLocaleDateString("en-CA", {
+            timeZone: "Asia/Jakarta",
+        });
+        if (d.toISOString().slice(0, 10) > todayJakarta)
+            throw new BadRequest("incidentDate must not be in the future");
+        out.incidentDate = d.toISOString();
+    }
 
-  if (sent("reporterName")) out.reporterName = parseString(body, "reporterName", { required: true, max: 100 });
-  if (sent("contactMethod")) out.contactMethod = parseEnum(body, "contactMethod", CONTACT_METHODS);
-  if (sent("contactValue")) out.contactValue = parseString(body, "contactValue", { required: true, max: 100 });
+    if (sent("reporterName"))
+        out.reporterName = parseString(body, "reporterName", {
+            required: true,
+            max: 100,
+        });
+    if (sent("contactMethod"))
+        out.contactMethod = parseEnum(body, "contactMethod", CONTACT_METHODS);
+    if (sent("contactValue"))
+        out.contactValue = parseString(body, "contactValue", {
+            required: true,
+            max: 100,
+        });
 
-  return out;
+    return out;
 }
 
 async function saveUpload(buffer, ext) {
-  const filename = `${crypto.randomUUID()}.${ext}`;
-  await fs.mkdir(UPLOAD_DIR, { recursive: true });
-  await fs.writeFile(path.join(UPLOAD_DIR, filename), buffer);
-  return `/uploads/${filename}`;
+    const filename = `${crypto.randomUUID()}.${ext}`;
+    await fs.mkdir(UPLOAD_DIR, { recursive: true });
+    await fs.writeFile(path.join(UPLOAD_DIR, filename), buffer);
+    return `/uploads/${filename}`;
 }
 
 // Strict pattern so a stored path can never point outside the uploads folder
 async function deleteUpload(imagePath) {
-  const m = /^\/uploads\/([0-9a-f-]{36}\.(?:jpg|png|webp))$/.exec(imagePath ?? "");
-  if (m) await fs.unlink(path.join(UPLOAD_DIR, m[1])).catch(() => {}); // best effort
+    const m = /^\/uploads\/([0-9a-f-]{36}\.(?:jpg|png|webp))$/.exec(
+        imagePath ?? "",
+    );
+    if (m) await fs.unlink(path.join(UPLOAD_DIR, m[1])).catch(() => {}); // best effort
 }
 
 // Runs BEFORE the body is parsed, so unknown tokens never cost us an upload
 const TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
 
 function loadEditableReport(req, res, next) {
-  const token = req.params.token;
-  const hash = TOKEN_RE.test(token) ? crypto.createHash("sha256").update(token).digest("hex") : null;
-  const report = hash && reports.find((r) => r.manageTokenHash === hash);
+    const token = req.params.token;
+    const hash = TOKEN_RE.test(token)
+        ? crypto.createHash("sha256").update(token).digest("hex")
+        : null;
+    const report = hash && reports.find((r) => r.manageTokenHash === hash);
 
-  // Malformed and unknown tokens get the same 404
-  if (!report) return next(new NotFound("Report not found"));
-  if (report.status !== "OPEN" || new Date(report.expiresAt) <= new Date()) {
-    return next(new HttpError(409, "This report can no longer be edited"));
-  }
-  req.report = report;
-  next();
+    // Malformed and unknown tokens get the same 404
+    if (!report) return next(new NotFound("Report not found"));
+    if (report.status !== "OPEN" || new Date(report.expiresAt) <= new Date()) {
+        return next(new HttpError(409, "This report can no longer be edited"));
+    }
+    req.report = report;
+    next();
 }
 
 // Memory storage: nothing touches disk until every field has passed validation
@@ -303,57 +343,81 @@ function toCreated(r) {
     };
 }
 
-app.post("/api/results", handleUpload, asyncHandler(async (req, res) => {
-  const fields = parseReportFields(req.body ?? {}, { partial: false });
+app.post(
+    "/api/results",
+    handleUpload,
+    asyncHandler(async (req, res) => {
+        const fields = parseReportFields(req.body ?? {}, { partial: false });
 
-  let photoExt = null;
-  if (req.file) {
-    photoExt = detectImageExt(req.file.buffer);
-    if (!photoExt) throw new BadRequest("photo must be a JPEG, PNG or WebP image");
-  }
+        let photoExt = null;
+        if (req.file) {
+            photoExt = detectImageExt(req.file.buffer);
+            if (!photoExt)
+                throw new BadRequest("photo must be a JPEG, PNG or WebP image");
+        }
 
-  const imagePath = photoExt ? await saveUpload(req.file.buffer, photoExt) : null;
+        const imagePath = photoExt
+            ? await saveUpload(req.file.buffer, photoExt)
+            : null;
 
-  const manageToken = crypto.randomBytes(32).toString("base64url");
-  const manageTokenHash = crypto.createHash("sha256").update(manageToken).digest("hex");
+        const manageToken = crypto.randomBytes(32).toString("base64url");
+        const manageTokenHash = crypto
+            .createHash("sha256")
+            .update(manageToken)
+            .digest("hex");
 
-  const now = new Date();
-  const record = {
-    id: Math.max(0, ...reports.map((r) => r.id)) + 1,
-    ...fields,
-    imagePath,
-    createdAt: now.toISOString(),
-    status: "OPEN",
-    expiresAt: new Date(now.getTime() + EXPIRY_DAYS * 24 * 60 * 60 * 1000).toISOString(),
-    manageTokenHash,
-  };
-  reports.push(record);
+        const now = new Date();
+        const record = {
+            id: Math.max(0, ...reports.map((r) => r.id)) + 1,
+            ...fields,
+            imagePath,
+            createdAt: now.toISOString(),
+            status: "OPEN",
+            expiresAt: new Date(
+                now.getTime() + EXPIRY_DAYS * 24 * 60 * 60 * 1000,
+            ).toISOString(),
+            manageTokenHash,
+        };
+        reports.push(record);
 
-  res.status(201).set("Cache-Control", "no-store").json({ report: toCreated(record), manageToken });
-}));
+        res.status(201)
+            .set("Cache-Control", "no-store")
+            .json({ report: toCreated(record), manageToken });
+    }),
+);
 
-app.patch("/api/manage/:token", loadEditableReport, handleUpload, asyncHandler(async (req, res) => {
-  const report = req.report;
-  const updates = parseReportFields(req.body ?? {}, { partial: true });
+app.patch(
+    "/api/manage/:token",
+    loadEditableReport,
+    handleUpload,
+    asyncHandler(async (req, res) => {
+        const report = req.report;
+        const updates = parseReportFields(req.body ?? {}, { partial: true });
 
-  let photoExt = null;
-  if (req.file) {
-    photoExt = detectImageExt(req.file.buffer);
-    if (!photoExt) throw new BadRequest("photo must be a JPEG, PNG or WebP image");
-  }
+        let photoExt = null;
+        if (req.file) {
+            photoExt = detectImageExt(req.file.buffer);
+            if (!photoExt)
+                throw new BadRequest("photo must be a JPEG, PNG or WebP image");
+        }
 
-  if (Object.keys(updates).length === 0 && !photoExt) throw new BadRequest("No fields to update");
+        if (Object.keys(updates).length === 0 && !photoExt)
+            throw new BadRequest("No fields to update");
 
-  const oldImage = report.imagePath;
-  if (photoExt) updates.imagePath = await saveUpload(req.file.buffer, photoExt);
+        const oldImage = report.imagePath;
+        if (photoExt)
+            updates.imagePath = await saveUpload(req.file.buffer, photoExt);
 
-  // `updates` only ever holds whitelisted fields, so status, expiresAt, id,
-  // createdAt and manageTokenHash can't change even if the client sends them
-  Object.assign(report, updates);
-  if (photoExt) await deleteUpload(oldImage);
+        // `updates` only ever holds whitelisted fields, so status, expiresAt, id,
+        // createdAt and manageTokenHash can't change even if the client sends them
+        Object.assign(report, updates);
+        if (photoExt) await deleteUpload(oldImage);
 
-  res.set("Cache-Control", "no-store").json({ report: toCreated(report) });
-}));
+        res.set("Cache-Control", "no-store").json({
+            report: toCreated(report),
+        });
+    }),
+);
 
 app.get("/api/results/:id", (req, res) => {
     const id = parsePositiveInt(req.params, "id");
@@ -416,6 +480,14 @@ app.get("/api/results", (req, res) => {
             totalPages: Math.ceil(total / limit),
         },
     });
+});
+
+app.get("/api/categories", (req, res) => {
+    res.json(require("../mock-data/categories.json"));
+});
+
+app.get("/api/locations", (req, res) => {
+    res.json(require("../mock-data/locations.json"));
 });
 
 app.use((req, res) => {

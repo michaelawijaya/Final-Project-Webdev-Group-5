@@ -303,120 +303,34 @@ function toCreated(r) {
     };
 }
 
-app.post(
-    "/api/results",
-    handleUpload,
-    asyncHandler(async (req, res) => {
-        const body = req.body ?? {};
+app.post("/api/results", handleUpload, asyncHandler(async (req, res) => {
+  const fields = parseReportFields(req.body ?? {}, { partial: false });
 
-        const type = parseEnum(body, "type", ["LOST", "FOUND"]);
-        const itemName = parseString(body, "itemName", {
-            required: true,
-            max: 100,
-        });
-        const description = parseString(body, "description", {
-            required: true,
-            max: 1000,
-        });
+  let photoExt = null;
+  if (req.file) {
+    photoExt = detectImageExt(req.file.buffer);
+    if (!photoExt) throw new BadRequest("photo must be a JPEG, PNG or WebP image");
+  }
 
-        const categoryId = requirePresent(
-            parsePositiveInt(body, "categoryId"),
-            "categoryId",
-        );
-        if (categories[categoryId] === undefined)
-            throw new BadRequest(
-                "categoryId does not reference an existing category",
-            );
+  const imagePath = photoExt ? await saveUpload(req.file.buffer, photoExt) : null;
 
-        const locationId = requirePresent(
-            parsePositiveInt(body, "locationId"),
-            "locationId",
-        );
-        if (locations[locationId] === undefined)
-            throw new BadRequest(
-                "locationId does not reference an existing location",
-            );
+  const manageToken = crypto.randomBytes(32).toString("base64url");
+  const manageTokenHash = crypto.createHash("sha256").update(manageToken).digest("hex");
 
-        const locationDetail = parseString(body, "locationDetail", {
-            max: 255,
-        });
+  const now = new Date();
+  const record = {
+    id: Math.max(0, ...reports.map((r) => r.id)) + 1,
+    ...fields,
+    imagePath,
+    createdAt: now.toISOString(),
+    status: "OPEN",
+    expiresAt: new Date(now.getTime() + EXPIRY_DAYS * 24 * 60 * 60 * 1000).toISOString(),
+    manageTokenHash,
+  };
+  reports.push(record);
 
-        const incidentDate = requirePresent(
-            parseDate(body, "incidentDate"),
-            "incidentDate",
-        );
-        // "Today" in Jakarta time, so a user after 17:00 UTC isn't wrongly told their date is in the future
-        const todayJakarta = new Date().toLocaleDateString("en-CA", {
-            timeZone: "Asia/Jakarta",
-        });
-        if (incidentDate.toISOString().slice(0, 10) > todayJakarta) {
-            throw new BadRequest("incidentDate must not be in the future");
-        }
-
-        const reporterName = parseString(body, "reporterName", {
-            required: true,
-            max: 100,
-        });
-        const contactMethod = parseEnum(body, "contactMethod", CONTACT_METHODS);
-        const contactValue = parseString(body, "contactValue", {
-            required: true,
-            max: 100,
-        });
-
-        let photoExt = null;
-        if (req.file) {
-            photoExt = detectImageExt(req.file.buffer);
-            if (!photoExt)
-                throw new BadRequest("photo must be a JPEG, PNG or WebP image");
-        }
-
-        // ---- everything below runs only after all validation passed ----
-
-        let imagePath = null;
-        if (photoExt) {
-            const filename = `${crypto.randomUUID()}.${photoExt}`;
-            await fs.mkdir(UPLOAD_DIR, { recursive: true });
-            await fs.writeFile(
-                path.join(UPLOAD_DIR, filename),
-                req.file.buffer,
-            );
-            imagePath = `/uploads/${filename}`;
-        }
-
-        const manageToken = crypto.randomBytes(32).toString("base64url"); // 43 characters
-        const manageTokenHash = crypto
-            .createHash("sha256")
-            .update(manageToken)
-            .digest("hex");
-
-        const now = new Date();
-        const record = {
-            id: Math.max(0, ...reports.map((r) => r.id)) + 1, // Prisma autoincrement replaces this
-            type,
-            itemName,
-            description,
-            categoryId,
-            locationId,
-            locationDetail,
-            incidentDate: incidentDate.toISOString(),
-            imagePath,
-            reporterName,
-            contactMethod,
-            contactValue,
-            createdAt: now.toISOString(),
-            status: "OPEN",
-            expiresAt: new Date(
-                now.getTime() + EXPIRY_DAYS * 24 * 60 * 60 * 1000,
-            ).toISOString(),
-            manageTokenHash,
-        };
-        reports.push(record); // in memory only: resets when the server restarts
-
-        res.status(201)
-            .set("Cache-Control", "no-store")
-            .json({ report: toCreated(record), manageToken });
-    }),
-);
+  res.status(201).set("Cache-Control", "no-store").json({ report: toCreated(record), manageToken });
+}));
 
 app.get("/api/results/:id", (req, res) => {
     const id = parsePositiveInt(req.params, "id");

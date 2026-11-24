@@ -419,6 +419,37 @@ app.patch(
     }),
 );
 
+app.post("/api/manage/:token/return", (req, res) => {
+    const { token } = req.params;
+    const report = reports.find((e) => {
+        return e.manageTokenHash === token;
+    });
+    console.log(report)
+    if (!report || report.status !== "OPEN") {
+        return res
+        .status(409)
+        .json({ error: `Cannot mark as returned: report is ${report.status}` });
+    }
+
+    report.status = "RETURNED"; 
+    res.json(toDetail(report)); 
+});
+
+app.post("/api/manage/:token/remove", (req, res) => {
+    const { token } = req.params;
+    const report = reports.find((e) => {
+        return e.manageTokenHash === token;
+    });
+    if (!report || report.status !== "OPEN") {
+        return res
+        .status(409)
+        .json({ error: `Cannot mark as returned: report is ${report.status}` });
+    }
+
+    report.status = "REMOVED"; 
+    res.json(toDetail(report));
+});
+
 app.get("/api/manage/:token", (req, res) => {
     const { token } = req.params;
     const report = reports.find((e) => {

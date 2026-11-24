@@ -332,6 +332,29 @@ app.post("/api/results", handleUpload, asyncHandler(async (req, res) => {
   res.status(201).set("Cache-Control", "no-store").json({ report: toCreated(record), manageToken });
 }));
 
+app.patch("/api/manage/:token", loadEditableReport, handleUpload, asyncHandler(async (req, res) => {
+  const report = req.report;
+  const updates = parseReportFields(req.body ?? {}, { partial: true });
+
+  let photoExt = null;
+  if (req.file) {
+    photoExt = detectImageExt(req.file.buffer);
+    if (!photoExt) throw new BadRequest("photo must be a JPEG, PNG or WebP image");
+  }
+
+  if (Object.keys(updates).length === 0 && !photoExt) throw new BadRequest("No fields to update");
+
+  const oldImage = report.imagePath;
+  if (photoExt) updates.imagePath = await saveUpload(req.file.buffer, photoExt);
+
+  // `updates` only ever holds whitelisted fields, so status, expiresAt, id,
+  // createdAt and manageTokenHash can't change even if the client sends them
+  Object.assign(report, updates);
+  if (photoExt) await deleteUpload(oldImage);
+
+  res.set("Cache-Control", "no-store").json({ report: toCreated(report) });
+}));
+
 app.get("/api/results/:id", (req, res) => {
     const id = parsePositiveInt(req.params, "id");
     const report = reports.find((r) => r.id === id);

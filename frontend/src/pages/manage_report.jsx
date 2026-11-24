@@ -32,10 +32,61 @@ function ManageReport() {
         return () => URL.revokeObjectURL(imageUrl);
     }, [photo]);
 
+    useEffect(() => {
+        const fetchReport = async () => {
+            try {
+                setLoading(true);
+                setError("");
+
+                const response = await fetch(
+                    `http://localhost:3000/api/manage/${encodeURIComponent(token)}`
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Failed to load report.");
+                }
+
+                const report = data.report ?? data;
+                console.log("Report data:", report);
+
+                setReportType(report.type);
+                setItemName(report.itemName);
+                setDescription(report.description);
+                setCategory(report.categoryId ?? report.category?.id);
+                setLocation(report.locationId ?? report.location?.id);
+                setLocationDetail(report.locationDetail ?? "");
+                setIncidentDate(report.incidentDate?.slice(0, 10) ?? "");
+                setReporterName(report.reporterName);
+                setContactMethod(report.contactMethod);
+                setContactValue(report.contactValue);
+                setExistingPhoto(report.imageUrl ?? report.imagePath ?? "");
+
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchReport();
+    }, [token]);
+
     const [reporterName, setReporterName] = useState("");
     const [contactMethod, setContactMethod] = useState("");
     const [contactValue, setContactValue] = useState("");
-    const handleUpdate = (e) => {
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [existingPhoto, setExistingPhoto] = useState("");
+    const [removeExistingPhoto, setRemoveExistingPhoto] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [success, setSuccess] = useState("");
+    const [reportStatus, setReportStatus] = useState("OPEN");
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [pendingAction, setPendingAction] = useState(null);
+
+    const handleUpdate = async (e) => {
         e.preventDefault();
 
         if (!itemName.trim()) {
@@ -140,27 +191,65 @@ function ManageReport() {
         if (photo) {
             formData.append("photo", photo);
         }
+        formData.append("removePhoto", String(removeExistingPhoto));
 
-        for (const [key, value] of formData.entries()) {
-            console.log(key, value);
+        try {
+            setSaving(true);
+            setSuccess("");
+
+            const response = await fetch(
+                `http://localhost:3000/api/manage/${encodeURIComponent(token)}`,
+                {
+                    method: "PATCH",
+                    body: formData,
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to update report.");
+            }
+
+            setSuccess("Report updated successfully!");
+            alert("Report updated successfully!");
+
+        } catch (err) {
+            alert(err.message || "Something went wrong. Please try again.");
+        } finally {
+            setSaving(false);
         }
+    }
 
-        console.log({
-            reportType,
-            cleanItemName,
-            cleanDescription,
-            category,
-            location,
-            cleanLocationDetail,
-            incidentDate,
-            photo,
-            cleanReporterName,
-            contactMethod,
-            cleanContactValue
-        });
+    const handleStatusChange = async (action) => {
+        try {
+            const response = await fetch(
+                `http://localhost:3000/api/manage/${encodeURIComponent(token)}/${action}`,
+                {
+                    method: "POST",
+                }
+            );
 
-        alert("Form validation successful! Your report is ready to be submitted.");
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to update report status.");
+            }
+
+            setReportStatus(data.status);
+
+        } catch (err) {
+            alert(err.message || "Something went wrong. Please try again.");
+        }
     };
+
+    if (loading) {
+        return <p>Loading report...</p>;
+    }
+
+    if (error) {
+        return <p>{error}</p>;
+    }
 
     return (
         <form className="report-form" onSubmit={handleUpdate}>
@@ -258,19 +347,30 @@ function ManageReport() {
                 <div className="form-group">
                     <label>Photo (Optional)</label>
 
-                    {photoPreview && (
+                    {photoPreview ? (
                         <div className="photo-preview">
-                            <img src={photoPreview} alt="Selected item preview" />
+                            <img src={photoPreview} alt="New selected item preview" />
                         </div>
-                    )}
+                    ) : existingPhoto && !removeExistingPhoto ? (
+                        <div className="photo-preview">
+                            <img
+                                src={`http://localhost:3000${existingPhoto}`}
+                                alt="Current item photo"
+                            />
+                        </div>
+                    ) : null}
 
-                    {photo && (
+                    {(photo || (existingPhoto && !removeExistingPhoto)) && (
                         <button
                             type="button"
                             className="remove-photo-button"
                             onClick={() => {
-                                setPhoto(null);
-                                document.getElementById("photo-upload").value = "";
+                                if (photo) {
+                                    setPhoto(null);
+                                    document.getElementById("photo-upload").value = "";
+                                } else {
+                                    setRemoveExistingPhoto(true);
+                                }
                             }}
                         >
                             Remove Photo
@@ -337,7 +437,85 @@ function ManageReport() {
                 </div>
             </section>
 
-            <button type="submit">Save Changes</button>
+            {success && <p className="success-message">{success}</p>}
+
+            <button type="submit" disabled={saving}>
+                {saving ? "Saving..." : "Save Changes"}
+            </button>
+
+            {reportStatus === "OPEN" && (
+                <div className="manage-actions">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setPendingAction("return");
+                            setShowConfirmModal(true);
+                        }}
+                    >
+                        {reportType === "LOST" ? "Mark as Returned" : "Mark as Claimed"}
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setPendingAction("remove");
+                            setShowConfirmModal(true);
+                        }}
+                    >
+                        Remove Report
+                    </button>
+                </div>
+            )}
+
+            {reportStatus !== "OPEN" && (
+                <p>
+                    This report is {reportStatus.toLowerCase()}.
+                </p>
+            )}
+
+            {showConfirmModal && (
+                <div className="modal-overlay">
+                    <div className="confirm-modal">
+                        <h2>
+                            {pendingAction === "return"
+                                ? "Confirm Report Status"
+                                : "Remove Report"}
+                        </h2>
+
+                        <p>
+                            {pendingAction === "return"
+                                ? "Are you sure you want to mark this report as returned/claimed?"
+                                : "Are you sure you want to remove this report?"}
+                        </p>
+
+                        <div className="modal-actions">
+                            <button
+                                type="button"
+                                className="cancel-button"
+                                onClick={() => {
+                                    setShowConfirmModal(false);
+                                    setPendingAction(null);
+                                }}
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                type="button"
+                                className="confirm-button"
+                                onClick={() => {
+                                    const action = pendingAction;
+                                    setShowConfirmModal(false);
+                                    setPendingAction(null);
+                                    handleStatusChange(action);
+                                }}
+                            >
+                                Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </form>
     );
 

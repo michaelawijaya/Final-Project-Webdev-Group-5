@@ -36,6 +36,24 @@ function ReportSubmission() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  const manageLink = success
+    ? `${window.location.origin}/manage/${success.manageToken}`
+    : "";
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(manageLink);
+      setCopied(true);
+
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    } catch (error) {
+      setError("Failed to copy the manage link.");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -177,20 +195,38 @@ function ReportSubmission() {
     <>
       {success ? (
         <div className="submission-success">
+          <div className="success-icon">✓</div>
+
           <h2>Report Submitted Successfully!</h2>
 
           <p>
-            Save this link to manage your report later.
-            Anyone with this link can edit your report.
+            Your report has been successfully submitted.
+            You can manage your report using the link below.
           </p>
 
-          <a href={`/manage/${success.manageToken}`}>
-            Manage Your Report
-          </a>
+          <div className="manage-link-container">
+            <label>Your Manage Link</label>
 
-          <p>
-            {window.location.origin}/manage/{success.manageToken}
-          </p>
+            <div className="manage-link">
+              <span>{manageLink}</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleCopyLink}
+            >
+              {copied ? "Copied!" : "Copy Manage Link"}
+            </button>
+          </div>
+
+          <div className="save-link-warning">
+            <strong>Important!</strong>
+            <p>
+              Save this link somewhere safe.
+              Anyone with this link can edit or remove your report.
+              This link cannot be recovered if lost.
+            </p>
+          </div>
         </div>
       ) : (
         <form className="report-form" onSubmit={handleSubmit}>

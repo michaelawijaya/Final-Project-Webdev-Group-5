@@ -200,8 +200,21 @@
 }
 
 .remove-photo-button {
-    color: #6b4b3e;
+    padding: 8px 14px;
+    margin-bottom: 12px;
+    border: 1px solid #a94442;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #a94442;
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
+    transition: 0.2s;
+}
+
+.remove-photo-button:hover {
+    background-color: #a94442;
+    color: #ffffff;
 }
 
 .submission-success {
@@ -234,19 +247,73 @@
     color: #777777;
 }
 
-.submission-success a {
-    display: inline-block;
-    margin: 15px 0;
-    padding: 12px 20px;
+.manage-link-container {
+    margin: 25px 0;
+    padding: 20px;
+    background-color: #faf7f5;
+    border: 1px solid #e5d8d1;
+    border-radius: 10px;
+    text-align: left;
+}
+
+.manage-link-container label {
+    display: block;
+    margin-bottom: 10px;
+    color: #4b2e24;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.manage-link {
+    padding: 12px;
+    margin-bottom: 15px;
+    background-color: #ffffff;
+    border: 1px solid #cccccc;
+    border-radius: 6px;
+    overflow-wrap: anywhere;
+    font-size: 13px;
+    color: #555555;
+}
+
+.manage-link-container button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
     background-color: #6b4b3e;
     color: #ffffff;
-    text-decoration: none;
-    border-radius: 6px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
     transition: 0.2s;
 }
 
-.submission-success a:hover {
+.manage-link-container button:hover {
     background-color: #8b6958;
+}
+
+.manage-link-container button:active {
+    transform: scale(0.98);
+}
+
+.save-link-warning {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #fff8e7;
+    border-left: 4px solid #d9a441;
+    border-radius: 6px;
+    text-align: left;
+}
+
+.save-link-warning strong {
+    color: #8a5a12;
+}
+
+.save-link-warning p {
+    margin-top: 6px;
+    font-size: 13px;
+    color: #66512e;
 }
 
 .error-message {
@@ -308,7 +375,15 @@
         line-height: 1.5;
     }
 
-    .submission-success a {
-        padding: 11px 18px;
+     .manage-link-container {
+        padding: 15px;
+    }
+
+    .manage-link {
+        font-size: 12px;
+    }
+
+    .manage-link-container button {
+        font-size: 14px;
     }
 }

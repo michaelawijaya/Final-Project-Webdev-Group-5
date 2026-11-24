@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { Link } from "react-router-dom";
 import reports from "../../../mock-data/reports.json"
 
 // components
@@ -12,20 +12,37 @@ import "./views.css"
 
 
 function View() {
+  const[searchQuary, setSearchQuery] = useState("")
+
+  const filteredReports = reports.filter((report) => 
+    report.itemName.toLowerCase().includes(searchQuary.toLowerCase())
+  );
 
   return (
     <>
       <div class="searchbar-container">
-        <Searchbar />
+        <Searchbar 
+         value={searchQuary}
+         onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
       <div class="counter-container">
         <Counter/>
       </div>
 
-      <div class="card-container">
-        {reports.map((report) => (
-          <Card key={report.id} name={report.itemName} img={report.imagePath} />
-        ))}
+      <div className="card-container">
+        {filteredReports.length > 0 ? (
+          filteredReports.map((report) => (
+            <Card key={report.id} 
+            name={report.itemName} 
+            img={report.imagePath} />
+          ))
+        ) : (
+          <div class="not-found-container">
+            <p>No Reports were found.</p>
+            <Link to="/report-submission" className="lost-report">Submit lost report</Link>
+          </div>
+        )}
       </div>
     </>
   )

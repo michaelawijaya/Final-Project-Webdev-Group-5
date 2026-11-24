@@ -178,24 +178,5 @@
     "status": "REMOVED",
     "expiresAt": "2026-12-11T18:00:00.000Z",
     "manageTokenHash": "afe1e57f529253dc5cff56a5a1f29ec517909994fbb7cc1dfd453a80311f0a55"
-  },
-
-  {
-    "id": 10,
-    "type": "FOUND",
-    "itemName": "Black Umbrella",
-    "description": "Automatic compact black umbrella with a wooden handle and wrist strap.",
-    "categoryId": 7,
-    "locationId": 1,
-    "locationDetail": "Lobby umbrella stand",
-    "incidentDate": "2026-11-11T17:15:00.000Z",
-    "imagePath": null,
-    "reporterName": "Citra Lestari",
-    "contactMethod": "PHONE",
-    "contactValue": "+62-813-9876-5432",
-    "createdAt": "2026-11-11T18:00:00.000Z",
-    "status": "REMOVED",
-    "expiresAt": "2026-12-11T18:00:00.000Z",
-    "manageTokenHash": "afe1e57f529253dc5cff56a5a1f29ec517909994fbb7cc1dfd453a80311f0a55"
   }
 ]   

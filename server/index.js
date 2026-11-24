@@ -241,7 +241,7 @@ async function deleteUpload(imagePath) {
     const m = /^\/uploads\/([0-9a-f-]{36}\.(?:jpg|png|webp))$/.exec(
         imagePath ?? "",
     );
-    if (m) await fs.unlink(path.join(UPLOAD_DIR, m[1])).catch(() => {}); // best effort
+    if (m) await fs.unlink(path.join(UPLOAD_DIR, m[1])).catch(() => { }); // best effort
 }
 
 // Runs BEFORE the body is parsed, so unknown tokens never cost us an upload
@@ -386,6 +386,7 @@ app.post(
     }),
 );
 
+
 app.patch(
     "/api/manage/:token",
     loadEditableReport,
@@ -395,23 +396,48 @@ app.patch(
         const updates = parseReportFields(req.body ?? {}, { partial: true });
 
         let photoExt = null;
+
         if (req.file) {
             photoExt = detectImageExt(req.file.buffer);
             if (!photoExt)
                 throw new BadRequest("photo must be a JPEG, PNG or WebP image");
         }
 
-        if (Object.keys(updates).length === 0 && !photoExt)
+        // Check whether the user wants to remove the existing photo
+        const removePhotoValue = getSingle(req.body ?? {}, "removePhoto");
+
+        if (
+            removePhotoValue !== undefined &&
+            !["true", "false"].includes(removePhotoValue)
+        ) {
+            throw new BadRequest("removePhoto must be true or false");
+        }
+
+        const shouldRemovePhoto = removePhotoValue === "true";
+
+        if (
+            Object.keys(updates).length === 0 &&
+            !photoExt &&
+            !shouldRemovePhoto
+        ) {
             throw new BadRequest("No fields to update");
+        }
 
         const oldImage = report.imagePath;
-        if (photoExt)
-            updates.imagePath = await saveUpload(req.file.buffer, photoExt);
 
-        // `updates` only ever holds whitelisted fields, so status, expiresAt, id,
-        // createdAt and manageTokenHash can't change even if the client sends them
+        // A newly uploaded photo takes priority over removal
+        if (photoExt) {
+            updates.imagePath = await saveUpload(req.file.buffer, photoExt);
+        } else if (shouldRemovePhoto) {
+            updates.imagePath = null;
+        }
+
         Object.assign(report, updates);
-        if (photoExt) await deleteUpload(oldImage);
+
+        // Delete the previous image when replacing or removing it
+        if (photoExt || shouldRemovePhoto) {
+            await deleteUpload(oldImage);
+        }
 
         res.set("Cache-Control", "no-store").json({
             report: toCreated(report),
@@ -419,46 +445,39 @@ app.patch(
     }),
 );
 
-app.post("/api/manage/:token/return", (req, res) => {
-    const { token } = req.params;
-    const report = reports.find((e) => {
-        return e.manageTokenHash === token;
-    });
-    console.log(report)
-    if (!report || report.status !== "OPEN") {
-        return res
-        .status(409)
-        .json({ error: `Cannot mark as returned: report is ${report.status}` });
+
+app.post(
+    "/api/manage/:token/return",
+    loadEditableReport,
+    (req, res) => {
+        const report = req.report;
+
+        report.status = "RETURNED";
+
+        res.set("Cache-Control", "no-store").json(toCreated(report));
     }
+);
 
-    report.status = "RETURNED"; 
-    res.json(toDetail(report)); 
-});
+app.post(
+    "/api/manage/:token/remove",
+    loadEditableReport,
+    (req, res) => {
+        const report = req.report;
 
-app.post("/api/manage/:token/remove", (req, res) => {
-    const { token } = req.params;
-    const report = reports.find((e) => {
-        return e.manageTokenHash === token;
-    });
-    if (!report || report.status !== "OPEN") {
-        return res
-        .status(409)
-        .json({ error: `Cannot mark as returned: report is ${report.status}` });
+        report.status = "REMOVED";
+
+        res.set("Cache-Control", "no-store").json(toCreated(report));
     }
+);
 
-    report.status = "REMOVED"; 
-    res.json(toDetail(report));
-});
-
-app.get("/api/manage/:token", (req, res) => {
-    const { token } = req.params;
-    const report = reports.find((e) => {
-        return e.manageTokenHash === token;
-    });
-    if (!report || !isPubliclyVisible(report))
-        throw new NotFound("Report not found");
-    res.json(toDetail(report));
-});
+app.get(
+    "/api/manage/:token",
+    loadEditableReport,
+    (req, res) => {
+        res.set("Cache-Control", "no-store");
+        res.json(toDetail(req.report));
+    }
+);
 
 
 app.get("/api/results/:id", (req, res) => {

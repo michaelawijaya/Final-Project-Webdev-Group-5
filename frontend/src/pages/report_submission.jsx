@@ -33,58 +33,63 @@ function ReportSubmission() {
   const [reporterName, setReporterName] = useState("");
   const [contactMethod, setContactMethod] = useState("");
   const [contactValue, setContactValue] = useState("");
-  const handleSubmit = (e) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(null);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     if (!itemName.trim()) {
-      alert("Item name cannot be empty!");
+      setError("Item name cannot be empty!");
       return;
     }
 
     if (!description.trim()) {
-      alert("Description cannot be empty!");
+      setError("Description cannot be empty!");
       return;
     }
 
     if (!category) {
-      alert("Please select a category!");
+      setError("Please select a category!");
       return;
     }
 
     if (!incidentDate) {
-      alert("Please select the incident date!");
+      setError("Please select the incident date!");
       return;
     }
 
     if (!location) {
-      alert("Please select a location!");
+      setError("Please select a location!");
       return;
     }
 
     if (photo && photo.size > 5 * 1024 * 1024) {
-      alert("Photo must not exceed 5 MB!");
+      setError("Photo must not exceed 5 MB!");
       return;
     }
 
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
 
     if (photo && !allowedTypes.includes(photo.type)) {
-      alert("Only JPEG, PNG, or WebP files are allowed!");
+      setError("Only JPEG, PNG, or WebP files are allowed!");
       return;
     }
 
     if (!reporterName.trim()) {
-      alert("Reporter name cannot be empty!");
+      setError("Reporter name cannot be empty!");
       return;
     }
 
     if (!contactMethod) {
-      alert("Please select a contact method!");
+      setError("Please select a contact method!");
       return;
     }
 
     if (!contactValue.trim()) {
-      alert("Contact information cannot be empty!");
+      setError("Contact information cannot be empty!");
       return;
     }
 
@@ -93,7 +98,7 @@ function ReportSubmission() {
       const phoneRegex = /^\+?\d{8,15}$/;
 
       if (!phoneRegex.test(phoneNumber)) {
-        alert("Please enter a valid phone number!");
+        setError("Please enter a valid phone number!");
         return;
       }
     }
@@ -102,7 +107,7 @@ function ReportSubmission() {
       const lineRegex = /^[a-zA-Z0-9._-]{4,20}$/;
 
       if (!lineRegex.test(contactValue)) {
-        alert("LINE ID must be 4-20 characters and only contain letters, numbers, dots, hyphens, or underscores!");
+        setError("LINE ID must be 4-20 characters and only contain letters, numbers, dots, hyphens, or underscores!");
         return;
       }
     }
@@ -111,7 +116,7 @@ function ReportSubmission() {
       const discordRegex = /^[a-zA-Z0-9._]{1,32}$/;
 
       if (!discordRegex.test(contactValue)) {
-        alert("Please enter a valid Discord username!");
+        setError("Please enter a valid Discord username!");
         return;
       }
     }
@@ -141,204 +146,236 @@ function ReportSubmission() {
       formData.append("photo", photo);
     }
 
-    for (const [key, value] of formData.entries()) {
-      console.log(key, value);
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/results",
+        {
+          method: "POST",
+          body: formData
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to submit report.");
+      }
+
+      setSuccess(data);
+
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
     }
-
-    console.log({
-      reportType,
-      cleanItemName,
-      cleanDescription,
-      category,
-      location,
-      cleanLocationDetail,
-      incidentDate,
-      photo,
-      cleanReporterName,
-      contactMethod,
-      cleanContactValue
-    });
-
-    alert("Form validation successful! Your report is ready to be submitted.");
   };
 
   return (
-    <form className="report-form" onSubmit={handleSubmit}>
-      <section className="form-section">
+    <>
+      {success ? (
+        <div className="submission-success">
+          <h2>Report Submitted Successfully!</h2>
 
-        <h2>Item Information</h2>
+          <p>
+            Save this link to manage your report later.
+            Anyone with this link can edit your report.
+          </p>
 
-        <div className="form-group">
-          <label>Report Type*</label>
+          <a href={`/manage/${success.manageToken}`}>
+            Manage Your Report
+          </a>
 
-          <div className="report-type-options">
-            <button type="button" className={reportType === "LOST" ? "active" : ""} onClick={() => setReportType("LOST")}>LOST</button>
-            <button type="button" className={reportType === "FOUND" ? "active" : ""} onClick={() => setReportType("FOUND")}>FOUND</button>
-          </div>
+          <p>
+            {window.location.origin}/manage/{success.manageToken}
+          </p>
         </div>
+      ) : (
+        <form className="report-form" onSubmit={handleSubmit}>
+          <section className="form-section">
 
-        <div className="form-group">
-          <label>Item Name*</label>
-          <input
-            type="text"
-            required
-            maxLength={100}
-            placeholder="Enter item name"
-            value={itemName}
-            onChange={(e) => setItemName(e.target.value)}
-          />
-        </div>
+            <h2>Item Information</h2>
 
-        <div className="form-group">
-          <label>Description*</label>
-          <textarea
-            required
-            maxLength={1000}
-            placeholder="Describe the item..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
+            <div className="form-group">
+              <label>Report Type*</label>
 
-        <div className="form-group">
-          <label>Category*</label>
-          <div className="category-options">
-            {categories.map((categoryItem) => (
-              <button
-                type="button"
-                className={category === categoryItem.id ? "active" : ""}
-                key={categoryItem.id}
-                onClick={() => setCategory(categoryItem.id)}
-              >
-                {categoryItem.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label>Location*</label>
-          <select
-            required
-            value={location ?? ""}
-            onChange={(e) => setLocation(Number(e.target.value))}
-          >
-            <option value="" disabled>Select where the item was lost/found</option>
-
-            {locations.map((locationItem) => (
-              <option key={locationItem.id} value={locationItem.id}>
-                {locationItem.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>Location Detail (Optional)</label>
-          <input
-            type="text"
-            maxLength={255}
-            placeholder="Add a more specific location (e.g. Room A2.06)"
-            value={locationDetail}
-            onChange={(e) => setLocationDetail(e.target.value)}
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Incident Date*</label>
-          <input
-            type="date"
-            required
-            max={maxDate}
-            value={incidentDate}
-            onChange={(e) => setIncidentDate(e.target.value)}
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Photo (Optional)</label>
-
-          {photoPreview && (
-            <div className="photo-preview">
-              <img src={photoPreview} alt="Selected item preview" />
+              <div className="report-type-options">
+                <button type="button" className={reportType === "LOST" ? "active" : ""} onClick={() => setReportType("LOST")}>LOST</button>
+                <button type="button" className={reportType === "FOUND" ? "active" : ""} onClick={() => setReportType("FOUND")}>FOUND</button>
+              </div>
             </div>
+
+            <div className="form-group">
+              <label>Item Name*</label>
+              <input
+                type="text"
+                required
+                maxLength={100}
+                placeholder="Enter item name"
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Description*</label>
+              <textarea
+                required
+                maxLength={1000}
+                placeholder="Describe the item..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Category*</label>
+              <div className="category-options">
+                {categories.map((categoryItem) => (
+                  <button
+                    type="button"
+                    className={category === categoryItem.id ? "active" : ""}
+                    key={categoryItem.id}
+                    onClick={() => setCategory(categoryItem.id)}
+                  >
+                    {categoryItem.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Location*</label>
+              <select
+                required
+                value={location ?? ""}
+                onChange={(e) => setLocation(Number(e.target.value))}
+              >
+                <option value="" disabled>Select where the item was lost/found</option>
+
+                {locations.map((locationItem) => (
+                  <option key={locationItem.id} value={locationItem.id}>
+                    {locationItem.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Location Detail (Optional)</label>
+              <input
+                type="text"
+                maxLength={255}
+                placeholder="Add a more specific location (e.g. Room A2.06)"
+                value={locationDetail}
+                onChange={(e) => setLocationDetail(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Incident Date*</label>
+              <input
+                type="date"
+                required
+                max={maxDate}
+                value={incidentDate}
+                onChange={(e) => setIncidentDate(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Photo (Optional)</label>
+
+              {photoPreview && (
+                <div className="photo-preview">
+                  <img src={photoPreview} alt="Selected item preview" />
+                </div>
+              )}
+
+              {photo && (
+                <button
+                  type="button"
+                  className="remove-photo-button"
+                  onClick={() => {
+                    setPhoto(null);
+                    document.getElementById("photo-upload").value = "";
+                  }}
+                >
+                  Remove Photo
+                </button>
+              )}
+
+              <label htmlFor="photo-upload" className="upload-box">
+                <span>📷</span>
+                <span>{photo ? photo.name : "Click to upload photo"}</span>
+                <small>JPEG, PNG, or WebP (Max. 5 MB)</small>
+              </label>
+
+              <input
+                id="photo-upload"
+                className="photo-input"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => setPhoto(e.target.files[0])}
+              />
+            </div>
+          </section>
+
+          <section className="form-section">
+            <h2>Reporter Information</h2>
+
+            <div className="form-group">
+              <label>Reporter Name*</label>
+              <input
+                type="text"
+                required
+                maxLength={100}
+                placeholder="Enter your name"
+                value={reporterName}
+                onChange={(e) => setReporterName(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Contact Method*</label>
+              <select
+                required
+                value={contactMethod}
+                onChange={(e) => setContactMethod(e.target.value)}
+              >
+                <option value="" disabled>Select your preferred contact method</option>
+                <option value="LINE">LINE</option>
+                <option value="PHONE">Phone</option>
+                <option value="WHATSAPP">WhatsApp</option>
+                <option value="EMAIL">Email</option>
+                <option value="DISCORD">Discord</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Contact Information*</label>
+              <input
+                type={contactMethod === "EMAIL" ? "email" : "text"}
+                required
+                maxLength={100}
+                placeholder="Enter your contact information"
+                value={contactValue}
+                onChange={(e) => setContactValue(e.target.value)}
+              />
+            </div>
+          </section>
+
+          {error && (
+            <p className="error-message">{error}</p>
           )}
-
-          {photo && (
-            <button
-              type="button"
-              className="remove-photo-button"
-              onClick={() => {
-                setPhoto(null);
-                document.getElementById("photo-upload").value = "";
-              }}
-            >
-              Remove Photo
-            </button>
-          )}
-
-          <label htmlFor="photo-upload" className="upload-box">
-            <span>📷</span>
-            <span>{photo ? photo.name : "Click to upload photo"}</span>
-            <small>JPEG, PNG, or WebP (Max. 5 MB)</small>
-          </label>
-
-          <input
-            id="photo-upload"
-            className="photo-input"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(e) => setPhoto(e.target.files[0])}
-          />
-        </div>
-      </section>
-
-      <section className="form-section">
-        <h2>Reporter Information</h2>
-
-        <div className="form-group">
-          <label>Reporter Name*</label>
-          <input
-            type="text"
-            required
-            maxLength={100}
-            placeholder="Enter your name"
-            value={reporterName}
-            onChange={(e) => setReporterName(e.target.value)}
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Contact Method*</label>
-          <select
-            required
-            value={contactMethod}
-            onChange={(e) => setContactMethod(e.target.value)}
-          >
-            <option value="" disabled>Select your preferred contact method</option>
-            <option value="LINE">LINE</option>
-            <option value="PHONE">Phone</option>
-            <option value="WHATSAPP">WhatsApp</option>
-            <option value="EMAIL">Email</option>
-            <option value="DISCORD">Discord</option>
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>Contact Information*</label>
-          <input
-            type={contactMethod === "EMAIL" ? "email" : "text"}
-            required
-            maxLength={100}
-            placeholder="Enter your contact information"
-            value={contactValue}
-            onChange={(e) => setContactValue(e.target.value)}
-          />
-        </div>
-      </section>
-
-      <button type="submit">Submit Report</button>
-    </form>
+          <button type="submit" disabled={loading}>
+            {loading ? "Submitting..." : "Submit Report"}
+          </button>
+        </form>
+      )}
+    </>
   );
 
 }

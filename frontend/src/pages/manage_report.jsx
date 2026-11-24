@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import categories from "../../../mock-data/categories.json";
-import locations from "../../../mock-data/locations.json";
 import "./manage_report.css";
 
 function ManageReport() {
@@ -12,6 +10,10 @@ function ManageReport() {
     const [description, setDescription] = useState("");
     const [category, setCategory] = useState(null);
     const [location, setLocation] = useState(null);
+    const [categories, setCategories] = useState([]);
+    const [locations, setLocations] = useState([]);
+    const [loadingOptions, setLoadingOptions] = useState(true);
+    const [optionsError, setOptionsError] = useState("");
     const [locationDetail, setLocationDetail] = useState("");
     const [incidentDate, setIncidentDate] = useState("");
     const today = new Date();
@@ -33,6 +35,37 @@ function ManageReport() {
     }, [photo]);
 
     useEffect(() => {
+        const fetchFormOptions = async () => {
+            try {
+                setLoadingOptions(true);
+                setOptionsError("");
+
+                const [categoriesResponse, locationsResponse] = await Promise.all([
+                    fetch("http://localhost:3000/api/categories"),
+                    fetch("http://localhost:3000/api/locations")
+                ]);
+
+                if (!categoriesResponse.ok || !locationsResponse.ok) {
+                    throw new Error("Failed to load categories and locations.");
+                }
+
+                const categoriesData = await categoriesResponse.json();
+                const locationsData = await locationsResponse.json();
+
+                setCategories(categoriesData);
+                setLocations(locationsData);
+
+            } catch (err) {
+                setOptionsError(err.message || "Failed to load form options.");
+            } finally {
+                setLoadingOptions(false);
+            }
+        };
+
+        fetchFormOptions();
+    }, []);
+
+    useEffect(() => {
         const fetchReport = async () => {
             try {
                 setLoading(true);
@@ -49,7 +82,6 @@ function ManageReport() {
                 }
 
                 const report = data.report ?? data;
-                console.log("Report data:", report);
 
                 setReportType(report.type);
                 setItemName(report.itemName);
@@ -99,18 +131,18 @@ function ManageReport() {
             return;
         }
 
-        if (!category) {
+        if (category === null || category === "") {
             alert("Please select a category!");
+            return;
+        }
+
+        if (location === null || location === "") {
+            alert("Please select a location!");
             return;
         }
 
         if (!incidentDate) {
             alert("Please select the incident date!");
-            return;
-        }
-
-        if (!location) {
-            alert("Please select a location!");
             return;
         }
 
@@ -237,6 +269,7 @@ function ManageReport() {
             }
 
             setReportStatus(data.status);
+            setSuccess("Report status updated successfully!");
 
         } catch (err) {
             alert(err.message || "Something went wrong. Please try again.");
@@ -256,6 +289,9 @@ function ManageReport() {
             <section className="form-section">
 
                 <h2>Item Information</h2>
+                {optionsError && (
+                    <p className="error-message">{optionsError}</p>
+                )}
 
                 <div className="form-group">
                     <label>Report Type*</label>
@@ -292,16 +328,21 @@ function ManageReport() {
                 <div className="form-group">
                     <label>Category*</label>
                     <div className="category-options">
-                        {categories.map((categoryItem) => (
-                            <button
-                                type="button"
-                                className={category === categoryItem.id ? "active" : ""}
-                                key={categoryItem.id}
-                                onClick={() => setCategory(categoryItem.id)}
-                            >
-                                {categoryItem.name}
-                            </button>
-                        ))}
+                        {loadingOptions ? (
+                            <p>Loading categories...</p>
+                        ) : (
+                            categories.map((categoryItem) => (
+                                <button
+                                    type="button"
+                                    className={category === categoryItem.id ? "active" : ""}
+                                    key={categoryItem.id}
+                                    disabled={!!optionsError}
+                                    onClick={() => setCategory(categoryItem.id)}
+                                >
+                                    {categoryItem.name}
+                                </button>
+                            ))
+                        )}
                     </div>
                 </div>
 
@@ -309,10 +350,15 @@ function ManageReport() {
                     <label>Location*</label>
                     <select
                         required
+                        disabled={loadingOptions || !!optionsError}
                         value={location ?? ""}
                         onChange={(e) => setLocation(Number(e.target.value))}
                     >
-                        <option value="" disabled>Select where the item was lost/found</option>
+                        <option value="" disabled>
+                            {loadingOptions
+                                ? "Loading locations..."
+                                : "Select where the item was lost/found"}
+                        </option>
 
                         {locations.map((locationItem) => (
                             <option key={locationItem.id} value={locationItem.id}>
@@ -439,9 +485,14 @@ function ManageReport() {
 
             {success && <p className="success-message">{success}</p>}
 
-            <button type="submit" disabled={saving}>
-                {saving ? "Saving..." : "Save Changes"}
-            </button>
+            {reportStatus === "OPEN" && (
+                <button
+                    type="submit"
+                    disabled={saving || loadingOptions || !!optionsError}
+                >
+                    {saving ? "Saving..." : "Save Changes"}
+                </button>
+            )}
 
             {reportStatus === "OPEN" && (
                 <div className="manage-actions">
@@ -468,7 +519,7 @@ function ManageReport() {
             )}
 
             {reportStatus !== "OPEN" && (
-                <p>
+                <p className="report-status-message">
                     This report is {reportStatus.toLowerCase()}.
                 </p>
             )}

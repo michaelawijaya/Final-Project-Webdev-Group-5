@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import categories from "../../../mock-data/categories.json";
-import locations from "../../../mock-data/locations.json";
 import "./report_submission.css";
 
 function ReportSubmission() {
@@ -10,6 +8,42 @@ function ReportSubmission() {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState(null);
   const [location, setLocation] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [loadingOptions, setLoadingOptions] = useState(true);
+  const [optionsError, setOptionsError] = useState("");
+
+  useEffect(() => {
+    const fetchFormOptions = async () => {
+      try {
+        setLoadingOptions(true);
+        setOptionsError("");
+
+        const [categoriesResponse, locationsResponse] = await Promise.all([
+          fetch("http://localhost:3000/api/categories"),
+          fetch("http://localhost:3000/api/locations")
+        ]);
+
+        if (!categoriesResponse.ok || !locationsResponse.ok) {
+          throw new Error("Failed to load categories and locations.");
+        }
+
+        const categoriesData = await categoriesResponse.json();
+        const locationsData = await locationsResponse.json();
+
+        setCategories(categoriesData);
+        setLocations(locationsData);
+
+      } catch (error) {
+        setOptionsError(error.message || "Failed to load form options.");
+      } finally {
+        setLoadingOptions(false);
+      }
+    };
+
+    fetchFormOptions();
+  }, []);
+
   const [locationDetail, setLocationDetail] = useState("");
   const [incidentDate, setIncidentDate] = useState("");
   const today = new Date();
@@ -37,6 +71,7 @@ function ReportSubmission() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState("");
 
   const manageLink = success
     ? `${window.location.origin}/manage/${success.manageToken}`
@@ -46,12 +81,14 @@ function ReportSubmission() {
     try {
       await navigator.clipboard.writeText(manageLink);
       setCopied(true);
+      setCopyError("");
 
       setTimeout(() => {
         setCopied(false);
       }, 2000);
+
     } catch (error) {
-      setError("Failed to copy the manage link.");
+      setCopyError("Failed to copy the manage link.");
     }
   };
 
@@ -217,6 +254,9 @@ function ReportSubmission() {
             >
               {copied ? "Copied!" : "Copy Manage Link"}
             </button>
+            {copyError && (
+              <p className="error-message">{copyError}</p>
+            )}
           </div>
 
           <div className="save-link-warning">
@@ -230,6 +270,9 @@ function ReportSubmission() {
         </div>
       ) : (
         <form className="report-form" onSubmit={handleSubmit}>
+          {optionsError && (
+            <p className="error-message">{optionsError}</p>
+          )}
           <section className="form-section">
 
             <h2>Item Information</h2>
@@ -268,12 +311,14 @@ function ReportSubmission() {
 
             <div className="form-group">
               <label>Category*</label>
+
               <div className="category-options">
                 {categories.map((categoryItem) => (
                   <button
                     type="button"
-                    className={category === categoryItem.id ? "active" : ""}
                     key={categoryItem.id}
+                    disabled={loadingOptions}
+                    className={category === categoryItem.id ? "active" : ""}
                     onClick={() => setCategory(categoryItem.id)}
                   >
                     {categoryItem.name}
@@ -284,12 +329,16 @@ function ReportSubmission() {
 
             <div className="form-group">
               <label>Location*</label>
+
               <select
                 required
+                disabled={loadingOptions}
                 value={location ?? ""}
                 onChange={(e) => setLocation(Number(e.target.value))}
               >
-                <option value="" disabled>Select where the item was lost/found</option>
+                <option value="" disabled>
+                  {loadingOptions ? "Loading locations..." : "Select where the item was lost/found"}
+                </option>
 
                 {locations.map((locationItem) => (
                   <option key={locationItem.id} value={locationItem.id}>
@@ -406,8 +455,12 @@ function ReportSubmission() {
           {error && (
             <p className="error-message">{error}</p>
           )}
-          <button type="submit" disabled={loading}>
-            {loading ? "Submitting..." : "Submit Report"}
+          <button type="submit" disabled={loading || loadingOptions || !!optionsError}>
+            {loading
+              ? "Submitting..."
+              : loadingOptions
+                ? "Loading Form..."
+                : "Submit Report"}
           </button>
         </form>
       )}

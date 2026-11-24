@@ -325,6 +325,22 @@
     background-color: #8b6958;
 }
 
+.success-message,
+.report-status-message {
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    color: #8B5E3C;
+    line-height: 1.6;
+}
+
+.success-message {
+    margin: 20px 0 12px;
+}
+
+.report-status-message {
+    margin: 12px 0 20px;
+}
+
 @media (max-width: 600px) {
     .report-form {
         padding: 20px;

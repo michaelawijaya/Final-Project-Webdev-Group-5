@@ -155,6 +155,74 @@ Returns the fields for get /results/:id
 It's the same as toListItem() but has reporterName and contactMethod and no createdAt fields
 */
 
+// partial=false (POST): every required field must be present.
+// partial=true (PATCH): absent fields are skipped, so the result holds only what was sent.
+function parseReportFields(body, { partial }) {
+  const out = {};
+  const sent = (key) => !partial || body[key] !== undefined;
+
+  if (sent("type")) out.type = parseEnum(body, "type", ["LOST", "FOUND"]);
+  if (sent("itemName")) out.itemName = parseString(body, "itemName", { required: true, max: 100 });
+  if (sent("description")) out.description = parseString(body, "description", { required: true, max: 1000 });
+
+  if (sent("categoryId")) {
+    const id = requirePresent(parsePositiveInt(body, "categoryId"), "categoryId");
+    if (categories[id] === undefined) throw new BadRequest("categoryId does not reference an existing category");
+    out.categoryId = id;
+  }
+  if (sent("locationId")) {
+    const id = requirePresent(parsePositiveInt(body, "locationId"), "locationId");
+    if (locations[id] === undefined) throw new BadRequest("locationId does not reference an existing location");
+    out.locationId = id;
+  }
+
+  // In PATCH, sending locationDetail="" clears it to null
+  if (sent("locationDetail")) out.locationDetail = parseString(body, "locationDetail", { max: 255 });
+
+  if (sent("incidentDate")) {
+    const d = requirePresent(parseDate(body, "incidentDate"), "incidentDate");
+    const todayJakarta = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
+    if (d.toISOString().slice(0, 10) > todayJakarta) throw new BadRequest("incidentDate must not be in the future");
+    out.incidentDate = d.toISOString();
+  }
+
+  if (sent("reporterName")) out.reporterName = parseString(body, "reporterName", { required: true, max: 100 });
+  if (sent("contactMethod")) out.contactMethod = parseEnum(body, "contactMethod", CONTACT_METHODS);
+  if (sent("contactValue")) out.contactValue = parseString(body, "contactValue", { required: true, max: 100 });
+
+  return out;
+}
+
+async function saveUpload(buffer, ext) {
+  const filename = `${crypto.randomUUID()}.${ext}`;
+  await fs.mkdir(UPLOAD_DIR, { recursive: true });
+  await fs.writeFile(path.join(UPLOAD_DIR, filename), buffer);
+  return `/uploads/${filename}`;
+}
+
+// Strict pattern so a stored path can never point outside the uploads folder
+async function deleteUpload(imagePath) {
+  const m = /^\/uploads\/([0-9a-f-]{36}\.(?:jpg|png|webp))$/.exec(imagePath ?? "");
+  if (m) await fs.unlink(path.join(UPLOAD_DIR, m[1])).catch(() => {}); // best effort
+}
+
+// Runs BEFORE the body is parsed, so unknown tokens never cost us an upload
+const TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
+
+function loadEditableReport(req, res, next) {
+  const token = req.params.token;
+  const hash = TOKEN_RE.test(token) ? crypto.createHash("sha256").update(token).digest("hex") : null;
+  const report = hash && reports.find((r) => r.manageTokenHash === hash);
+
+  // Malformed and unknown tokens get the same 404
+  if (!report) return next(new NotFound("Report not found"));
+  if (report.status !== "OPEN" || new Date(report.expiresAt) <= new Date()) {
+    return next(new HttpError(409, "This report can no longer be edited"));
+  }
+  req.report = report;
+  next();
+}
+
 // Memory storage: nothing touches disk until every field has passed validation
 const uploadPhoto = multer({
     storage: multer.memoryStorage(),

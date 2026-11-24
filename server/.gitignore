@@ -41,6 +41,7 @@ pnpm-debug.log*
 coverage/
 .nyc_output/
 uploads/
+client_test.js
 
 # Caches
 .cache/

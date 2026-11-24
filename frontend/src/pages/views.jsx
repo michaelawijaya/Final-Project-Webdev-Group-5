@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import reports from "../../../mock-data/reports.json"
 
 // components
@@ -17,6 +17,8 @@ function View() {
   const filteredReports = reports.filter((report) => 
     report.itemName.toLowerCase().includes(searchQuary.toLowerCase())
   );
+
+  const navigate = useNavigate();
 
   return (
     <>
@@ -36,7 +38,10 @@ function View() {
           filteredReports.map((report) => (
             <Card key={report.id} 
             name={report.itemName} 
-            img={report.imagePath} />
+            img={report.imagePath} 
+            onClick={() => navigate(`/details/${report.id}`)}
+            
+            />
           ))
         ) : (
           <div class="not-found-container">

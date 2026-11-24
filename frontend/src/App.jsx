@@ -3,6 +3,7 @@ import Home from "./pages/home";
 import ReportSubmission from "./pages/report_submission";
 import View from "./pages/views";
 import ManageReport from "./pages/manage_report";
+import Details from "./pages/details";
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
       <Route path="/report-submission" element={<ReportSubmission />} />
       <Route path="/views" element={<View />} />
       <Route path="/manage/:token" element={<ManageReport />} />
+      <Route path="/details/:id" element={<Details />} />
     </Routes>
   );
 }

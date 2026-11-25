@@ -76,7 +76,7 @@ Final-Project-Webdev-Group-5/
 |---|---|---|
 | Backend Developer | Michael | Backend development, API, and database
 | Frontend Developer 1 | Lindsay | Frontend development (Homepage, Report Submission, Contact Privacy)
-| Frontend Developer 2 | Danish | Frontend development (Public Report Listing & Details, Category Filtering)
+| Frontend Developer 2 | Danish | Frontend development (Public Report Listing & Details, Category Filtering, Footer, Navbar)
 
 ## 6. Setup Instructions
 

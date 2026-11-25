@@ -1,0 +1,101 @@
+.footer-wrapper {
+  position: relative;
+  z-index: 10; /* Memastikan footer tetap di atas background radar-pattern */
+  width: 100%;
+  background-color: #ffffff;
+  border-top: 2px solid #ede0d4;
+  color: #5c4738;
+  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  margin-top: auto;
+}
+
+.footer-container {
+  max-width: 1100px; /* Samakan dengan lebar max-width .main-content */
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 1.5rem;
+  box-sizing: border-box;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  padding-bottom: 2rem;
+}
+
+.brand-title {
+  margin: 0 0 0.6rem 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #502300;
+  text-align: left;
+}
+
+.brand-desc {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #6b5344;
+  max-width: 20rem;
+  text-align: left;
+}
+
+.footer-heading {
+  margin: 0 0 0.85rem 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b4535;
+}
+
+.footer-links ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.footer-links a {
+  text-decoration: none;
+  color: #5c4738;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: color 0.2s ease, transform 0.2s ease;
+  display: inline-block;
+}
+
+.footer-links a:hover {
+  color: #502300;
+  transform: translateX(4px);
+}
+
+.footer-bottom {
+  border-top: 1px solid #ede0d4;
+  padding-top: 1.25rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #9c7a63;
+}
+
+.footer-bottom p {
+  margin: 0;
+}
+
+/* Responsif untuk layar tablet dan HP */
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+
+  .brand-title{
+    text-align: center;
+  }
+
+  .brand-desc{
+    text-align: center;
+  }
+}

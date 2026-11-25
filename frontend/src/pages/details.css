@@ -1,0 +1,25 @@
+.details-main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1.5rem;
+}
+
+.main-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  gap: 2rem; /* Atur jarak antar kartu di sini (misal 1.5rem atau 2rem) */
+}
+
+@media screen and (max-width: 1000px) {
+  .main-container {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+}
